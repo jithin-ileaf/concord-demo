@@ -1,0 +1,26 @@
+# Core API framework
+fastapi==0.115.6
+uvicorn==0.34.0
+pydantic==2.12.4
+
+# AWS S3
+boto3==1.42.16
+
+# Database
+pymongo==4.10.1
+psycopg2-binary==2.9.11
+
+# Google AI
+google-generativeai==0.8.5
+
+# Airtable
+pyairtable==2.3.3
+
+# PDF Processing
+pdf2image==1.17.0
+pytesseract==0.3.13
+pillow==12.0.0
+
+# Environment
+python-dotenv==1.2.1
+python-multipart==0.0.20
