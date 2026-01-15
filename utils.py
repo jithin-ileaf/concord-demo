@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from pdf2image import convert_from_path
 from collections import defaultdict
 import pytesseract
-import shutil
 import psycopg2
 import psycopg2.extras
 psycopg2.extras.register_uuid()
@@ -27,15 +26,6 @@ def create_model(model_name="gemini-2.5-pro",
         },
     )
     return model
-
-
-def get_pdfs(path: str):
-    pdfs = [
-        os.path.join(path, file)
-        for file in os.listdir(path)
-        if file.lower().endswith(".pdf")
-    ]
-    return sorted(pdfs)
 
 
 def upload_pdf_to_model(pdf_path: str):
@@ -72,7 +62,7 @@ def extract_text_with_positions(file: str) -> tuple[dict, str]:
     file_name = Path(file).stem
     pages = convert_from_path(
         file,
-        dpi=300,
+        dpi=150,
         grayscale=True,
         fmt='jpg'
     )
@@ -134,43 +124,9 @@ def extract_text_with_positions(file: str) -> tuple[dict, str]:
     return dict(output), " ".join(all_text)
 
 
-def format_json_output(json_data):
-    for key, value in json_data.items():
-        for sub_key, sub_value in value.items():
-            # Handle list format
-            if isinstance(sub_value, list):
-                # Convert list items to bullet points
-                formatted_items = []
-                for item in sub_value:
-                    item_str = str(item).strip()
-                    formatted_items.append(f"• {item_str}")
-                sub_value = '\n'.join(formatted_items)
-                # Update the data dictionary with modified value
-                json_data[key][sub_key] = sub_value
-            # Handle string format that looks like a list
-            elif str(sub_value).startswith('[') and str(sub_value).endswith(']'):
-                sub_value = sub_value.replace('[', '').replace(']', '').strip()
-                # Split on periods followed by space or end of string
-                # Use regex to identify sentence-ending periods
-                sub_value = re.sub(r'\.\s+', '.\n• ', sub_value)
-                # Handle last sentence if it ends with a period
-                if not sub_value.startswith('• '):
-                    sub_value = '• ' + sub_value
-                # Update the data dictionary with modified value
-                json_data[key][sub_key] = sub_value
-    return json_data
-
-
 def compact_coordinates(json_data):
     # Remove newlines inside lists of numbers
     return re.sub(r'\[\s+([\d\.\,\s\-eE]+?)\s+\]',
                   lambda m: '[' + ' '.join(m.group(1).split()) + ']',
                   json_data)
 
-
-def remove_folder(folder_path):
-    if folder_path.exists() and folder_path.is_dir():
-        shutil.rmtree(folder_path)
-        print(f"Folder and all subfolders removed successfully: {folder_path}")
-    else:
-        print(f"Folder does not exist: {folder_path}")

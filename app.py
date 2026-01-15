@@ -17,6 +17,7 @@ from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, UploadFile, HTTPException, Body
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pymongo import MongoClient
 
@@ -31,10 +32,6 @@ from post_processing import (
     populate_template,
     upload_to_airtable,
     update_amendment_changes_table,
-    upload_to_s3,
-    save_to_mongodb,
-    update_mongodb_and_airtable,
-    process_single_pdf,
     concord_template
 )
 
@@ -57,6 +54,14 @@ app = FastAPI(
     title="Contract Processing API",
     description="API for processing contract PDF files with AI extraction",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # can be ["*"] to allow all origins (not recommended in production)
+    allow_credentials=True,
+    allow_methods=["*"],     # GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],     # Authorization, Content-Type, etc.
 )
 
 # ============================================================================
@@ -114,7 +119,7 @@ if MONGODB_URI and MONGODB_DATABASE and MONGODB_COLLECTION:
 
 # Initialize the model
 model = create_model(
-    model_name="gemini-2.5-flash",
+    model_name="gemini-2.5-pro",
     temperature=0.2,
 )
 
@@ -210,6 +215,7 @@ def update_mongodb_and_airtable(
         "airtable_updated": False,
         "error": None
     }
+    
 
     if mongo_collection is None:
         result["error"] = "MongoDB not configured"
@@ -248,24 +254,115 @@ def update_mongodb_and_airtable(
             api = Api(AIRTABLE_API_KEY)
             updated_tables = []
 
-            # Update each table that was originally created
-            for table_name, airtable_record_id in record_id.items():
-                if table_name in json_data:
-                    try:
-                        table = api.table(AIRTABLE_BASE_ID, table_name)
-                        # Flatten the data for Airtable
-                        flattened_data = flatten_extracted_data(
-                            json_data[table_name]
-                        )
-                        # Update the record
-                        table.update(airtable_record_id, flattened_data)
-                        updated_tables.append(table_name)
-                        print(f"✓ Airtable updated: {table_name} "
-                              f"(Record ID: {airtable_record_id})")
-                    except Exception as table_error:
-                        print(f"✗ Error updating Airtable table "
-                              f"{table_name}: {table_error}")
-                        continue
+            # Store record IDs for linking
+            account_record_id = None
+            contact_record_id = None
+            agreement_name = None
+
+            # Extract Agreement Name for use in Contract fields
+            if "Details" in json_data and "Agreement Name" in json_data["Details"]:
+                agreement_name_data = json_data["Details"]["Agreement Name"]
+                if isinstance(agreement_name_data, dict) and "Extracted Value" in agreement_name_data:
+                    agreement_name = agreement_name_data["Extracted Value"]
+                else:
+                    agreement_name = agreement_name_data
+
+            # First pass: Update Account and Contacts to get their record IDs
+            for table_name in ["Account", "Contacts"]:
+                if table_name not in json_data or table_name not in record_id:
+                    continue
+
+                try:
+                    table_data = json_data[table_name].copy()
+                    airtable_record_id = record_id[table_name]
+
+                    # Get the Airtable table
+                    table = api.table(AIRTABLE_BASE_ID, table_name)
+
+                    # Flatten the nested structure
+                    flattened_data = flatten_extracted_data(table_data)
+
+                    # Apply field-specific rules
+                    if table_name == "Account":
+                        # Remove Contacts and Details fields
+                        flattened_data.pop("Contacts", None)
+                        flattened_data.pop("Details", None)
+                        account_record_id = airtable_record_id
+                    elif table_name == "Contacts":
+                        # Remove Full Name field
+                        flattened_data.pop("Full Name", None)
+                        contact_record_id = airtable_record_id
+
+                    # Update the record
+                    table.update(airtable_record_id, flattened_data)
+                    updated_tables.append(table_name)
+                    print(f"✓ Airtable updated: {table_name} "
+                          f"(Record ID: {airtable_record_id})")
+
+                except Exception as table_error:
+                    print(f"✗ Error updating Airtable table "
+                          f"{table_name}: {table_error}")
+                    continue
+
+            # Second pass: Update remaining tables with proper linking
+            for table_name in json_data.keys():
+                # Skip already processed tables
+                if table_name in ["Account", "Contacts"]:
+                    continue
+
+                # Handle table name mapping
+                airtable_table_name = table_name
+                if table_name == "R & A":
+                    airtable_table_name = "Royalties & Accounting"
+
+                # Check if this table was originally created
+                if airtable_table_name not in record_id:
+                    continue
+
+                try:
+                    airtable_record_id = record_id[airtable_table_name]
+                    table_data = json_data[table_name].copy()
+
+                    # Get the Airtable table
+                    table = api.table(AIRTABLE_BASE_ID, airtable_table_name)
+
+                    # Flatten the nested structure
+                    flattened_data = flatten_extracted_data(table_data)
+
+                    # Add Contract field to specific tables
+                    if table_name in ["Registration Information", "General Information", 
+                                      "Licensing Approvals", "R & A", "Documents"]:
+                        if agreement_name:
+                            flattened_data["Contract"] = agreement_name
+                            print(f"  → Adding Contract field: {agreement_name}")
+
+                    # Add linking fields
+                    if table_name == "Details" and account_record_id:
+                        flattened_data["Contracted Writer Party"] = [account_record_id]
+
+                    if table_name == "Registration Information":
+                        if contact_record_id:
+                            flattened_data["Writer's Name"] = [contact_record_id]
+
+                    # Update the record
+                    table.update(airtable_record_id, flattened_data)
+                    updated_tables.append(airtable_table_name)
+                    print(f"✓ Airtable updated: {airtable_table_name} "
+                          f"(Record ID: {airtable_record_id})")
+
+                except Exception as table_error:
+                    print(f"✗ Error updating Airtable table "
+                          f"{airtable_table_name}: {table_error}")
+                    continue
+
+            # Add Account Name linking to Contacts table if both exist
+            if account_record_id and contact_record_id and "Contacts" in record_id:
+                try:
+                    contacts_table = api.table(AIRTABLE_BASE_ID, "Contacts")
+                    contacts_table.update(contact_record_id, {"Account Name": [account_record_id]})
+                    print(f"  ✓ Contacts: Linked to Account (ID: {account_record_id})")
+                except Exception as e:
+                    print(f"  ✗ Contacts: Failed to link Account - {str(e)}")
 
             result["airtable_updated"] = len(updated_tables) > 0
             result["updated_tables"] = updated_tables
@@ -352,8 +449,8 @@ def process_single_pdf(
         json_text = compact_coordinates(json_text)
         with open(json_output_path, "w") as json_file:
             json_file.write(json_text)
-
         result["output_path"] = json_output_path
+        result["actual_json"] = response_data
         result["status"] = "success"
 
         # Upload to Airtable if configured
