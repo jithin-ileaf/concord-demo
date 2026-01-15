@@ -273,32 +273,32 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "(Paragraph 4) Publisher shall not, without your prior written consent, ... [rest of Licensing Approval Provision]"
 
     48. Licensing: Any ad for personal hygiene, firearms or tobacco products
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for licensing of songs for advertisements for personal hygiene, firearms or tobacco products.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for licensing of songs for advertisements for personal hygiene, firearms or tobacco products. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "No Restriction"
 
     49. Licensing: Any political or religious use
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for licensing of songs for political or religious use.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for licensing of songs for political or religious use. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "No Restriction"
 
     50. Licensing: Samples and interpolations
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for licensing of songs used for samples or interpolations.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for licensing of songs used for samples or interpolations. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "Consent Required"
 
     51. Licensing: Fundamental adaptations / translations / etc. to music, lyrics, title, or harmonic structure
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for adapting or translating the music, lyrics, title, or harmonic structure of songs and licensing of these versions.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for adapting or translating the music, lyrics, title, or harmonic structure of songs and licensing of these versions. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "Consent Required"
 
     52. Licensing: Issue blanket licenses including the Comps
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for issuing a blanket license for the publisher's entire catalog, which includes the writer's songs.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for issuing a blanket license for the publisher's entire catalog, which includes the writer's songs. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "No Restriction"
 
     53. Licensing: Licence the Compositions for period with extends beyond the Rights Period
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for licensing of songs beyond the period that the publisher has licensing rights
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for licensing of songs beyond the period that the publisher has licensing rights. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "No Restriction"
 
@@ -308,7 +308,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "(Paragraph 17) We shall have the right to use your name... [rest of Name & Likeness Approval Provision]"
 
     55. Name & Likeness Approvals
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for using or licensing the writer's name, image or likeness.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for using or licensing the writer's name, image or likeness. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "Consent Required"
 
@@ -318,7 +318,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "(Section 4) Publisher will have the right to license the master recording rights for third party synchronization... [rest of Sync Master Rep Approval Provision]"
 
     57. Synchronization: Films, Television Programmes, Advertisements, Computer Games, Interactive Devices, Videos
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for synchronization licensing of the master (or sound recordings, NOT compositions) of songs in films, TV, advertisements, games, videos, interactive devices, etc.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for synchronization licensing of the master (or sound recordings, NOT compositions) of songs in films, TV, advertisements, games, videos, interactive devices, etc. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "No Restriction"
 
@@ -328,22 +328,22 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "(Paragraph 8) Grant a "first use" mechanical license... [rest of Miscellaneous Licensing Approval Provision]"
 
     59. Print: Print, publish and vend, and license the same
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for print relating to the songs.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for print relating to the songs. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "No Restriction"
 
     60. Mechanical: Issue "first use" mechanical licenses
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for issuing 'first use' mechanical licenses to create initial recordings of songs.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for issuing 'first use' mechanical licenses to create initial recordings of songs. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "Consent Required"
 
     61. Mechanical: Issue mechanical reproduction licenses at less than full statutory rate for the US
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for issuing mechanical reproduction licenses at less than full statutory rate for the US.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for issuing mechanical reproduction licenses at less than full statutory rate for the US. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "No Restriction"
 
     62. Performance: Grand rights licenses and right to dramatize
-    - **Instruction**: Whether the publisher needs approval or consent from the writer for dramatizing the songs or granting licenses to dramatize the songs.
+    - **Instruction**: Whether the publisher needs approval or consent from the writer for dramatizing the songs or granting licenses to dramatize the songs. If nothing is mentioned about this in the contract, return "No Restriction".
     - **Format**: "[Consent Required / No Restriction]"
     - **Example**: "Consent Required"
 

@@ -161,7 +161,8 @@ def save_to_mongodb(
     file_name: str,
     s3_link: str,
     record_id: Dict[str, Any],
-    actual_json: Dict[str, Any] = None
+    actual_json: Dict[str, Any] = None,
+    amendment_changes_record_id: str = None
 ) -> Optional[str]:
     """
     Save contract information to MongoDB.
@@ -172,6 +173,7 @@ def save_to_mongodb(
         s3_link: S3 URL of the uploaded PDF
         record_id: Dictionary returned by upload_to_airtable
         actual_json: The processed JSON data from the contract
+        amendment_changes_record_id: Airtable record ID for Amendment Changes table
 
     Returns:
         MongoDB document ID, or None if insert fails
@@ -186,6 +188,7 @@ def save_to_mongodb(
             "s3_link": s3_link,
             "record_id": record_id,
             "actual_json": actual_json or {},
+            "amendment_changes_record_id": amendment_changes_record_id,
             "created_at": time()
         }
         result = mongo_collection.insert_one(document)
@@ -232,19 +235,30 @@ def update_mongodb_and_airtable(
         # Get record_id from MongoDB document
         record_id = document.get("record_id", {})
         file_name = document.get("file_name", "unknown")
+        amendment_changes_record_id = document.get("amendment_changes_record_id")
 
         # Update MongoDB with new JSON data
         update_data = {
-            "json_data": json_data,
+            "actual_json": json_data,
             "updated_at": time(),
             "reviewed": True
         }
-        mongo_collection.update_one(
+        
+        update_result = mongo_collection.update_one(
             {"contract_id": contract_id},
             {"$set": update_data}
         )
-        result["mongodb_updated"] = True
-        print(f"✓ MongoDB updated for contract_id: {contract_id}")
+        
+        # Verify the update was successful
+        if update_result.modified_count > 0:
+            result["mongodb_updated"] = True
+            print(f"✓ MongoDB updated for contract_id: {contract_id}")
+        else:
+            print(f"⚠ MongoDB update matched but didn't modify document for contract_id: {contract_id}")
+            result["mongodb_updated"] = True  # Still consider it successful if matched
+            
+        # Log update details for debugging
+        print(f"  → Matched: {update_result.matched_count}, Modified: {update_result.modified_count}")
 
         # Update Airtable if configured and record_id exists
         if AIRTABLE_API_KEY and AIRTABLE_BASE_ID and record_id:
@@ -364,6 +378,15 @@ def update_mongodb_and_airtable(
                 except Exception as e:
                     print(f"  ✗ Contacts: Failed to link Account - {str(e)}")
 
+            # Update Amendment Changes table's Contract field if it exists and agreement_name changed
+            if amendment_changes_record_id and agreement_name:
+                try:
+                    amendment_table = api.table(AIRTABLE_BASE_ID, "Amendment Changes")
+                    amendment_table.update(amendment_changes_record_id, {"Contract": agreement_name})
+                    print(f"  ✓ Amendment Changes: Updated Contract field to '{agreement_name}' (ID: {amendment_changes_record_id})")
+                except Exception as e:
+                    print(f"  ✗ Amendment Changes: Failed to update Contract field - {str(e)}")
+
             result["airtable_updated"] = len(updated_tables) > 0
             result["updated_tables"] = updated_tables
 
@@ -478,17 +501,9 @@ def process_single_pdf(
         # Save to MongoDB if configured
         if mongo_collection is not None and s3_url:
             contract_id = str(uuid.uuid4())
-            mongodb_id = save_to_mongodb(
-                contract_id=contract_id,
-                file_name=filename,
-                s3_link=s3_url,
-                record_id=airtable_record or {},
-                actual_json=response_data
-            )
-            result["contract_id"] = contract_id
-            result["mongodb_id"] = mongodb_id
-
+            
             # Update Amendment Changes table in Airtable with contract_id
+            amendment_record_id = None
             if AIRTABLE_API_KEY and AIRTABLE_BASE_ID:
                 amendment_record_id = update_amendment_changes_table(
                     frontend_url=FRONTEND_URL,
@@ -498,6 +513,17 @@ def process_single_pdf(
                     airtable_base_id=AIRTABLE_BASE_ID
                 )
                 result["amendment_changes_record_id"] = amendment_record_id
+            
+            mongodb_id = save_to_mongodb(
+                contract_id=contract_id,
+                file_name=filename,
+                s3_link=s3_url,
+                record_id=airtable_record or {},
+                actual_json=response_data,
+                amendment_changes_record_id=amendment_record_id
+            )
+            result["contract_id"] = contract_id
+            result["mongodb_id"] = mongodb_id
 
     except Exception as e:
         result["status"] = "failed"
