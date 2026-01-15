@@ -1,0 +1,50 @@
+name: Deploy Python App to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    env:
+      REMOTE_PATH: ${{ secrets.PATH }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Add environment file
+        env:
+          ENV: ${{ secrets.ENV }}
+        run: |
+          if [ -n "$ENV" ]; then
+            echo "$ENV" > .env
+            echo "Created .env from secret."
+          else
+            echo "ENV secret not set; skipping creation.";
+          fi
+
+      - name: Transfer source code to EC2 server
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete --exclude='__pycache__' --exclude='README.md' --exclude='.git' --exclude='.github' --exclude='*.log'
+          path: ./
+          remote_path: ${{ secrets.PATH }}/
+          remote_host: ${{ secrets.HOST }}
+          remote_user: ${{ secrets.USER }}
+          remote_key: ${{ secrets.SSH_KEY }}
+
+      - name: Execute start.sh script on EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          key: ${{ secrets.SSH_KEY }}
+          username: ${{ secrets.USER }}
+          port: 22
+          command_timeout: 30m
+          script: |
+            pwd; ./start-backend.sh
