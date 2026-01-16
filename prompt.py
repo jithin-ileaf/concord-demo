@@ -36,26 +36,25 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     ### FIELDS TO EXTRACT
     Extract the following fields exactly as defined below. Use the exact field names provided, with no shortening or different wording. Only use the example to understand the output format, NOT to influence the output value.
 
-    1. Writer Party
-    - **Instruction**: Full legal name of the songwriter or artist party. If an entity acts on behalf of the writer, treat the writer as the party instead. Use title case. Do not include aliases, p/k/a, or f/s/o names.
+    1. Account Name
+    - **Instruction**: Full legal name of the songwriter or artist party. If an entity acts on behalf of the writer, treat the writer as the party or account instead. Use title case. Do not include aliases, p/k/a, or f/s/o names.
     - **Format**: "[Full Legal Name of Writer]"
     - **Example**: "John C. Adams"
 
-    2. Writer First Name
+    2. First Name
     - **Instruction**: First name of the songwriter or artist party.
     - **Format**: "[First Name of Writer]"
     - **Example**: "John"
 
-    3. Writer Last Name
+    3. Last Name
     - **Instruction**: Last name of the songwriter or artist party.
     - **Format**: "[Last Name of Writer]"
     - **Example**: "Adams"
 
-    4. Writer Type
+    4. Type
     - **Instruction**: The role of the songwriter or artist party. Either "Artist" or "Songwriter".
     - **Format**: "[Artist / Songwriter]"
     - **Example**: "Songwriter"
-
 
     5. Billing Street
     - **Instruction**: Street address of the songwriter or artist party as stated in the agreement.
@@ -99,7 +98,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
 
     13. Agreement Name
     - **Instruction**: Name of the agreement according to the defined format below.
-    - **Format**: "[Writer Party (field 1)] - [Date of Agreement in DD Month YYYY] - [Agreement Type (field 13)] Agreement"
+    - **Format**: "[Account Name (field 1)] - [Date of Agreement in DD Month YYYY] - [Agreement Type (field 12)] Agreement"
     - **Example**: "John C. Adams - 01 January 1992 - Full Publishing Agreement"
 
     14. Year
@@ -145,10 +144,10 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     22. Territory
     - **Instruction**: The main territories of the contract. Return the value as a comma-separated list. Always use one or some of the pre-defined values below. If the territories do not include the pre-defined values, leave the value "N/A".
     - **Format**: "A comma-separated list where each element is one of: "USA", "Canada", "Mexico", "Universe"."
-    - **Example**: ["Universe"]
+    - **Example**: "Universe" or "USA, Canada, Japan"
 
     23. Other Territory
-    - **Instruction**: If the territories of the contract include some territories not part of the pre-defined values in Territory (field 23), list those territories here. Return the value as a comma-separated list. If there is no territory to be defined in this field, leave the value "N/A".
+    - **Instruction**: If the territories of the contract include some territories not part of the pre-defined values in Territory (field 22), list those territories here. Return the value as a comma-separated list. If there is no territory to be defined in this field, leave the value "N/A".
     - **Format**: "A comma-separated list where each element is NOT one of: "USA", "Canada", "Mexico", "Universe"."
     - **Example**: "Japan" or "Japan, Korea"
 
@@ -173,7 +172,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "Initial Period + 4 Options" or "Initial Period + Automatic Extensions"
 
     28. Are there Options?
-    - **Instruction**: Whether the agreement includes option periods. output only either of "Yes", "No" or "N/A".
+    - **Instruction**: Whether the agreement includes option periods. Output only either "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "Yes"
 
@@ -193,32 +192,32 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: 4
 
     32. Catalog (Full / Partial)
-    - **Instruction**: Whether the agreement covers all songs in the writer's catalog. output only either of "Full", "Partial" or "N/A".
+    - **Instruction**: Whether the agreement covers all songs in the writer's catalog. Output only either of "Full" or "Partial".
     - **Format**: "[Full / Partial]"
     - **Example**: "Partial"
 
     33. All Songs Written During Term
-    - **Instruction**: Whether the agreement covers all songs written during the contract term. output only either of "Yes", "No" or "N/A".
+    - **Instruction**: Whether the agreement covers all songs written during the contract term. Output only either of "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "Yes"
 
     34. All Songs Acquired during Term
-    - **Instruction**: Whether the agreement covers all songs acquired by the writer or their entity during the contract term. output only either of "Yes", "No" or "N/A".
+    - **Instruction**: Whether the agreement covers all songs acquired by the writer or their entity during the contract term. Output only either of "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "No"
 
     35. All Songs Prior to Term
-    - **Instruction**: Whether the agreement covers all existing songs written or acquired by the writer before the contract term. output only either of "Yes", "No" or "N/A".
+    - **Instruction**: Whether the agreement covers all existing songs written or acquired by the writer before the contract term. Output only either of "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "Yes"
 
     36. Only Songs on Artist's Album
-    - **Instruction**: Whether the agreement covers only songs on one or some specific albums created by the writer or artist. output only either of "Yes", "No" or "N/A".
+    - **Instruction**: Whether the agreement covers only songs on one or some specific albums created by the writer or artist. Output only either of "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "No"
 
     37. [Prior] Pass-Through Income Included in Concord
-    - **Instruction**: Whether the contract mentions any prior pass-through income that is included in Concord or the Concord entity. output only either of "Yes", "No" or "N/A".
+    - **Instruction**: Whether the contract mentions any prior pass-through income that is included in Concord or the Concord entity. Output only either of "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "No"
 
@@ -233,17 +232,17 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "Publishing + Master"
 
     40. Rights Granted: Master Representation
-    - **Instruction**: Whether master representation rights are granted, and if so, whether master representation rights are exclusive or not. output only one of the following options: "Exclusive", "Non-Exclusive", "No Master Rep" or "N/A".
+    - **Instruction**: Whether master representation rights are granted, and if so, whether master representation rights are exclusive or not. Output only one of the following options: "Exclusive", "Non-Exclusive", "No Master Rep".
     - **Format**: "[Exclusive / Non-Exclusive / No Master Rep]"
     - **Example**: "No Master Rep"
 
     41. Rights Granted: Sync Camp
-    - **Instruction**: Whether granted synchronization rights are exclusive or not. If there is no information about this, leave the value as "Yes". output only one of the following options: "Exclusive", "Non-Exclusive" or "Yes" or "N/A".
+    - **Instruction**: Whether granted synchronization rights are exclusive or not. If there is no information about this, leave the value as "Yes". Output only one of the following options: "Exclusive", "Non-Exclusive", "Yes".
     - **Format**: "[Exclusive / Non-Exclusive / Yes]"
     - **Example**: "Exclusive"
 
     42. Rights Granted: Demos
-    - **Instruction**: Whether the contract grants rights to the publisher for demos created by the writer. output only either of "Yes", "No" or "N/A".
+    - **Instruction**: Whether the contract grants rights to the publisher for demos created by the writer. Output only either "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "No"
 
@@ -253,7 +252,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "[Excluded Right 1]\\n[Excluded Right 2]"
 
     44. Right of First Negotiation / Match Right
-    - **Instruction**: Whether the publisher has the right of first negotiation, first match or first refusal. These rights require the writer to first come to the publisher to discuss a renewal or a competing offer so the publisher gets the chance to negotiate the renewal or match that offer. output only either of "Yes", "No" or "N/A".
+    - **Instruction**: Whether the publisher has the right of first negotiation, first match or first refusal. These rights require the writer to first come to the publisher to discuss a renewal or a competing offer so the publisher gets the chance to negotiate the renewal or match that offer. Output only either "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "No"
 
@@ -263,7 +262,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "New York"
 
     46. Choice of Law - Other
-    - **Instruction**: If Choice of Law (field 46) is "Other", use this field to provide the state or country whose law governs the contract.
+    - **Instruction**: If Choice of Law (field 45) is "Other", use this field to provide the state or country whose law governs the contract.
     - **Format**: "[State or Country]"
     - **Example**: "Texas"
 
@@ -368,7 +367,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "(Paragraph 19) "Gross Income" shall mean... [rest of Gross Income Definition]"
 
     67. At Source
-    - **Instruction**: Whether royalties (or any income amounts) are calculated based on gross income received at source, or the first point of collection, before any deductions.
+    - **Instruction**: Whether royalties (or any income amounts) are calculated based on gross income received at source, or the first point of collection, before any deductions. Output only either "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "Yes"
 
@@ -398,91 +397,71 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "(Paragraph 5.2) In connection with Sync Camp Masters exploitation, Publisher shall credit Writer... [rest of Camp Master Rep Royalty Provision]"
 
     73. Royalty Escalation
-    - **Instruction**: Whether royalty escalation provisions exist.
+    - **Instruction**: Whether royalty escalation provisions exist. Output only either "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "No"
 
     74. Retroactive Collection
-    - **Instruction**: Whether retroactive royalty collection is permitted.
+    - **Instruction**: Whether retroactive royalty collection is permitted. Output only either "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "Yes"
 
     75. Schedule A Received
-    - **Instruction**: Whether there exists a Schedule A with the contract that lists the songs the contract term applies to, or whether there exists a Schedule A delivered separately but mentioned in the contract.
+    - **Instruction**: Whether there exists a Schedule A with the contract that lists the songs the contract term applies to, or whether there exists a Schedule A delivered separately but mentioned in the contract. Output only either "Yes" or "No".
     - **Format**: "[Yes / No]"
     - **Example**: "No"
 
-    76. Account Name
-    - **Instruction**: Use the full data of Writer Party.
-    - **Format**: "[Full Legal Name of Writer]"
-    - **Example**: "John C. Adams"
-
-    77. Type
-    - **Instruction**: Use the full data of Writer Type. output either "Artist" or "Songwriter" only.
-    - **Format**: "[Artist / Songwriter]"
-    - **Example**: "Songwriter"
-
-    78. Description
-    - **Instruction**: Use the value of Year field to make the value.
+    76. Description
+    - **Instruction**: Use the value of Year (field 14) to make the value.
     - **Format**: "[This is the contractual address as of [Year] of agreement]"
     - **Example**: "This is the contractual address as of 1992 of agreement"
 
-    79. First Name
-    - **Instruction**: Use the full data of Writer First Name.
-    - **Format**: "[First Name of Writer]"
-    - **Example**: "John"
-
-    80. Last Name
-    - **Instruction**: Use the full data of Writer Last Name.
-    - **Format**: "[Last Name of Writer]"
-    - **Example**: "Adams"
-
-    81. Assignability of Contract
-    - **Instruction**: If `"Assignability of Contract Details"` is not null or "N/A", then the value is "Yes", else the value is "No".
+    77. Assignability of Contract
+    - **Instruction**: If `"Assignability of Contract Details"` (field 19) is not null or "N/A", then the value is "Yes", else the value is "No".
     - **Format**: "[Yes / No]"
     - **Example**: "Yes"
 
-    82. Change of Control
-    - **Instruction**: If `"Change of Control Details"` is not null or "N/A", then the value is "Yes", else the value is "No".
+    78. Change of Control
+    - **Instruction**: If `"Change of Control Details"` (field 20) is not null or "N/A", then the value is "Yes", else the value is "No".
     - **Format**: "[Yes / No]"
     - **Example**: "No"
 
-    83. Key Person Provision
-    - **Instruction**: If `"Key Person Provision Details"` is not null or "N/A", then the value is "Yes", else the value is "No".
+    79. Key Person Provision
+    - **Instruction**: If `"Key Person Provision Details"` (field 21) is not null or "N/A", then the value is "Yes", else the value is "No".
     - **Format**: "[Yes / No]"
     - **Example**: "Yes"
 
-    84. Minimum Delivery Commitment?
-    - **Instruction**:  If "Minimum Delivery Commitment Amount" field  value is 0, then the value is "No", else the value is "Yes". If the contract does not mention delivery commitments at all then the value is "N/A".
-    - **Format**: "[Yes / No / N/A]"
+    80. Minimum Delivery Commitment?
+    - **Instruction**:  If "Minimum Delivery Commitment Amount" (field 30) is 0, then the value is "No", else the value is "Yes".
+    - **Format**: "[Yes / No]"
     - **Example**: "Yes"
 
-    85. Minimum Delivery Release Commitment?
-    - **Instruction**: If "Minimum Delivery Release Commitment Amount" field value is 0, then the value is "No", else the value is "Yes". If the contract does not mention delivery release commitments at all then the value is "N/A".
-    - **Format**: "[Yes / No / N/A]"
+    81. Minimum Delivery Release Commitment?
+    - **Instruction**: If "Min Delivery Release Commitment Amount" (field 31) is 0, then the value is "No", else the value is "Yes".
+    - **Format**: "[Yes / No]"
     - **Example**: "No"
 
-    86. Writer(s) CAE/IPI Name
+    82. Writer(s) CAE/IPI Name
     - **Instruction**: Always leave the value "N/A".
     - **Format**: "N/A"
     - **Example**: "N/A"
 
-    87. Writer(s) CAE/IPI Number
-    - **Instruction**: Use the full data of Writer CAE/IPI Number.
+    83. Writer(s) CAE/IPI Number
+    - **Instruction**: The IPI or CAE number of the writer party.
     - **Format**: "9-to-11-digit IPI number"
     - **Example**: "12345678901"
 
-    88. Publishing Designee(s) IPI Name
+    84. Publishing Designee(s) IPI Name
     - **Instruction**: Always leave the value "N/A".
     - **Format**: "N/A"
     - **Example**: "N/A"
 
-    89. Publishing Designee(s) IPI Number
+    85. Publishing Designee(s) IPI Number
     - **Instruction**: Always leave the value "N/A".
     - **Format**: "N/A"
     - **Example**: "N/A"
 
-    90. Other Performing Rights Organization
+    86. Other Performing Rights Organization
     - **Instruction**: **Instruction**: Always leave the value "N/A".
     - **Format**: "N/A"
     - **Example**: "N/A"

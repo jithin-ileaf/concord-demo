@@ -20,3 +20,5 @@ Use your env variables
 - run the command
     python app.py
 
+Testing the application 
+- launch http://localhost:8000/docs#/

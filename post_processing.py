@@ -300,10 +300,10 @@ def update_amendment_changes_table(
     agreement_name=None,
     airtable_api_key=None,
     airtable_base_id=None,
-    table_name="Amendment Changes"
+    table_name="Contract Utilities"
 ):
     """
-    Update the Amendment Changes table in Airtable with the contract_id.
+    Update the Contract Utilities table in Airtable with the contract_id.
     If the 'Links' column doesn't exist, it will be created automatically
     when the first record is inserted.
 
@@ -313,13 +313,13 @@ def update_amendment_changes_table(
         agreement_name: The agreement name to add to the Contract column
         airtable_api_key: Airtable API key
         airtable_base_id: Airtable Base ID
-        table_name: Name of the table (default: "Amendment Changes")
+        table_name: Name of the table (default: "Contract Utilities")
 
     Returns:
         Record ID if successful, None otherwise
     """
     if not all([airtable_api_key, airtable_base_id, contract_id]):
-        print("Warning: Missing required parameters for Amendment Changes update.")
+        print("Warning: Missing required parameters for Contract Utilities update.")
         return None
 
     try:
@@ -336,15 +336,15 @@ def update_amendment_changes_table(
         # Add Contract field if agreement_name is provided
         if agreement_name:
             record_data["Contract"] = agreement_name
-            print(f"  → Adding Contract field to Amendment Changes: {agreement_name}")
+            print(f"  → Adding Contract field to Contract Utilities: {agreement_name}")
 
         # Create new record
         record = table.create(record_data)
-        print(f"✓ Amendment Changes: Added contract_id {contract_id} (Record ID: {record['id']})")
+        print(f"✓ Contract Utilities: Added contract_id {contract_id} (Record ID: {record['id']})")
         return record['id']
 
     except Exception as e:
-        print(f"✗ Error updating Amendment Changes table: {str(e)}")
+        print(f"✗ Error updating Contract Utilities table: {str(e)}")
         return None
 
 

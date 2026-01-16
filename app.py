@@ -119,7 +119,7 @@ if MONGODB_URI and MONGODB_DATABASE and MONGODB_COLLECTION:
 
 # Initialize the model
 model = create_model(
-    model_name="gemini-2.5-pro",
+    model_name="gemini-2.5-flash",
     temperature=0.2,
 )
 
@@ -173,7 +173,7 @@ def save_to_mongodb(
         s3_link: S3 URL of the uploaded PDF
         record_id: Dictionary returned by upload_to_airtable
         actual_json: The processed JSON data from the contract
-        amendment_changes_record_id: Airtable record ID for Amendment Changes table
+        amendment_changes_record_id: Airtable record ID for Contract Utilities table
 
     Returns:
         MongoDB document ID, or None if insert fails
@@ -378,14 +378,14 @@ def update_mongodb_and_airtable(
                 except Exception as e:
                     print(f"  ✗ Contacts: Failed to link Account - {str(e)}")
 
-            # Update Amendment Changes table's Contract field if it exists and agreement_name changed
+            # Update Contract Utilities table's Contract field if it exists and agreement_name changed
             if amendment_changes_record_id and agreement_name:
                 try:
-                    amendment_table = api.table(AIRTABLE_BASE_ID, "Amendment Changes")
+                    amendment_table = api.table(AIRTABLE_BASE_ID, "Contract Utilities")
                     amendment_table.update(amendment_changes_record_id, {"Contract": agreement_name})
-                    print(f"  ✓ Amendment Changes: Updated Contract field to '{agreement_name}' (ID: {amendment_changes_record_id})")
+                    print(f"  ✓ Contract Utilities: Updated Contract field to '{agreement_name}' (ID: {amendment_changes_record_id})")
                 except Exception as e:
-                    print(f"  ✗ Amendment Changes: Failed to update Contract field - {str(e)}")
+                    print(f"  ✗ Contract Utilities: Failed to update Contract field - {str(e)}")
 
             result["airtable_updated"] = len(updated_tables) > 0
             result["updated_tables"] = updated_tables
@@ -502,7 +502,7 @@ def process_single_pdf(
         if mongo_collection is not None and s3_url:
             contract_id = str(uuid.uuid4())
             
-            # Update Amendment Changes table in Airtable with contract_id
+            # Update Contract Utilities table in Airtable with contract_id
             amendment_record_id = None
             if AIRTABLE_API_KEY and AIRTABLE_BASE_ID:
                 amendment_record_id = update_amendment_changes_table(
