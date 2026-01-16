@@ -594,11 +594,17 @@ async def get_contract(contract_id: str):
                 detail=f"Contract ID '{contract_id}' not found"
             )
 
+        # Get actual_json and remove "Amendment Changes" if it exists
+        actual_json = document.get("actual_json", {})
+        if "Amendment Changes" in actual_json:
+            actual_json = actual_json.copy()  # Create a copy to avoid modifying the original
+            del actual_json["Amendment Changes"]
+
         response_data = {
             "contract_id": contract_id,
             "file_name": document.get("file_name", "unknown"),
             "s3_link": document.get("s3_link"),
-            "actual_json": document.get("actual_json", {})
+            "actual_json": actual_json
         }
 
         return JSONResponse(content=response_data, status_code=200)
