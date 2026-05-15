@@ -3,73 +3,25 @@ import json
 from pyairtable import Api
 
 
-choice_of_law_mapping = {
-    "California": "CA - California",
-    "Florida": "FL - Florida",
-    "New York": "NY - New York",
-    "Tennessee": "TN - Tennessee",
-    "United States": "USA - United States",
-    "Australia": "AUS - Australia",
-    "Canada": "CAN - Canada",
-    "Germany": "DEU - Germany",
-    "Denmark": "DNK - Denmark",
-    "England & Wales": "EAW - England & Wales",
-    "France": "FRA - France",
-    "United Kingdom of Great Britain and Northern Ireland":
-    "GBR - United Kingdom of Great Britain and Northern Ireland",
-    "Ireland": "IRL - Ireland",
-    "Japan": "JPN - Japan",
-    "Korea": "KOR - Korea",
-    "Mexico": "MEX - Mexico",
-    "New Zealand": "NZL - New Zealand",
-    "Puerto Rico": "PRI - Puerto Rico",
-}
-
-currency_mapping = {
-    "USD": "USD - U.S. Dollar",
-    "AUD": "AUD - Australian Dollar",
-    "EUR": "EUR - Euro",
-    "GBP": "GBP - British Pound",
-    "MXN": "MXN - Mexican Peso",
-    "NZD": "NZD - New Zealand Dollar",
-}
-
-pro_accepted_list = [
-    'ACEMLA', 'AllTrack', 'MCOS', 'AMRA', 'APRA', 'ASCAP', 'BMI', 'CMRRA',
-    'GMR', 'IMRO', 'JASRAC', 'KODA', 'MCPSI', 'PPCA', 'PPI', 'PPL',
-    'Pro Music Rights', 'PRS', 'Re:Sound', 'SACD', 'SACEM', 'SESAC',
-    'SOCAN', 'SoundExchange'
-]
+# pro_accepted_list = [
+#     'ACEMLA', 'AllTrack', 'MCOS', 'AMRA', 'APRA', 'ASCAP', 'BMI', 'CMRRA',
+#     'GMR', 'IMRO', 'JASRAC', 'KODA', 'MCPSI', 'PPCA', 'PPI', 'PPL',
+#     'Pro Music Rights', 'PRS', 'Re:Sound', 'SACD', 'SACEM', 'SESAC',
+#     'SOCAN', 'SoundExchange'
+# ]
 
 
-def update_extracted_value(json_data,
-                           choice_of_law_mapping=choice_of_law_mapping,
-                           currency_mapping=currency_mapping,
-                           pro_accepted_list=pro_accepted_list):
-    # Choice of Law
-    if "Choice of Law" in json_data and "Extracted Value" in json_data["Choice of Law"]:
-        original_value = json_data["Choice of Law"]["Extracted Value"]
-        json_data["Choice of Law"]["Extracted Value"] = choice_of_law_mapping.get(
-            original_value, original_value)
+# def update_extracted_value(json_data,
+#                            choice_of_law_mapping=None,
+#                            currency_mapping=None,
+#                            pro_accepted_list=pro_accepted_list):
+#     # Current PRO
+#     if "Current PRO" in json_data and isinstance(json_data["Current PRO"], dict) and "Extracted Value" in json_data["Current PRO"]:
+#         original_value = json_data["Current PRO"]["Extracted Value"]
+#         if original_value not in pro_accepted_list and original_value not in ("N/A", "Not specified", "Not specified in APA"):
+#             json_data["Current PRO"]["Extracted Value"] = "Other"
 
-    # Currency
-    if "Currency" in json_data and "Extracted Value" in json_data["Currency"]:
-        original_value = json_data["Currency"]["Extracted Value"]
-        json_data["Currency"]["Extracted Value"] = currency_mapping.get(
-            original_value, original_value)
-
-    # Performing Rights Organization (PRO)
-    if "Performing Rights Organization" in json_data and "Extracted Value" in json_data["Performing Rights Organization"]:
-        original_value = json_data["Performing Rights Organization"]["Extracted Value"]
-        json_data["Performing Rights Organization"]["Extracted Value"] = original_value if original_value in pro_accepted_list else "Other"
-
-    if json_data["Performing Rights Organization"]["Extracted Value"] == "Other":
-        json_data["Other Performing Rights Organization"] = json_data["Performing Rights Organization"]
-
-    else:
-        pass
-
-    return json_data
+#     return json_data
 
 
 def populate_template(template, source):
@@ -99,31 +51,45 @@ def populate_template(template, source):
 def flatten_extracted_data(data_dict):
     """
     Flatten nested JSON structure for Airtable upload.
-    Converts nested fields into a flat dictionary with field names and extracted values.
+    Recursively extracts all fields from nested categories and converts them 
+    into a flat dictionary with field names and extracted values.
 
     Args:
-        data_dict: Dictionary containing nested field data
+        data_dict: Dictionary containing nested field data (with categories like "General", "Asset Details", etc.)
 
     Returns:
-        Flattened dictionary ready for Airtable
+        Flattened dictionary ready for Airtable (no categories, just individual fields)
     """
     # List of fields that are multi-select in Airtable and require array values
     multi_select_fields = [
-        "Territory"
+        "Territory",
+        "General Rights Tags"
+    ]
+
+    # List of fields to skip (e.g., checkbox fields that need special handling)
+    skip_fields = [
+        "Distribution Rights Acquired"
     ]
 
     flattened = {}
 
-    for field_name, field_data in data_dict.items():
+    def process_field(field_name, field_data):
+        """Helper function to process a single field."""
+        # Skip fields that are in the skip list
+        if field_name in skip_fields:
+            return
+
         if isinstance(field_data, dict) and "Extracted Value" in field_data:
             extracted_value = field_data["Extracted Value"]
 
             # Handle multi-select fields - convert to array if not already
             if field_name in multi_select_fields:
                 if isinstance(extracted_value, str):
-                    # Convert string to array, handling empty strings and "N/A"
                     if extracted_value and extracted_value != "N/A":
-                        flattened[field_name] = [extracted_value]
+                        # Split on newlines and strip whitespace from each tag
+                        items = [v.strip() for v in extracted_value.split("\n") if v.strip() and v.strip() != "N/A"]
+                        if items:
+                            flattened[field_name] = items
                     # Skip empty or N/A values for multi-select
                 elif isinstance(extracted_value, list):
                     # Already an array
@@ -132,323 +98,266 @@ def flatten_extracted_data(data_dict):
                 # Store the extracted value directly
                 flattened[field_name] = extracted_value
         elif isinstance(field_data, dict):
-            # If it's a dict without "Extracted Value", convert to JSON string
-            flattened[field_name] = json.dumps(field_data)
+            # Recursively process nested dictionaries (categories)
+            for nested_field_name, nested_field_data in field_data.items():
+                process_field(nested_field_name, nested_field_data)
         else:
             # Store primitive values as-is
             flattened[field_name] = field_data
 
+    # Process all top-level fields/categories
+    for field_name, field_data in data_dict.items():
+        process_field(field_name, field_data)
+
     return flattened
 
 
-def upload_to_airtable(filename, json_file, airtable_api_key=None, airtable_base_id=None):
+def upload_to_airtable(filename, json_file, airtable_api_key=None, airtable_base_id=None, airtable_table_name=None, contract_id=None):
     """
-    Upload contract data to multiple Airtable tables.
-    Each top-level key in the JSON (Account, Contacts, Details, etc.) 
-    corresponds to a separate table in Airtable.
+    Upload contract data to a single Airtable table.
+    All fields are flattened and uploaded as one record.
 
     Args:
         filename: Name of the contract
-        pdf_path: Path to the PDF file
-        json_path: Path to the JSON file
+        json_file: JSON string of the extracted contract data
+        airtable_api_key: Airtable API key
+        airtable_base_id: Airtable Base ID
+        airtable_table_name: Airtable table name
+        contract_id: Contract ID from MongoDB (optional)
 
     Returns:
-        Dictionary of created records by table name
+        Dictionary with record_id and catalog name
     """
-    record_id = {}
-    if not all([airtable_api_key, airtable_base_id]):
+    if not all([airtable_api_key, airtable_base_id, airtable_table_name]):
         print("Warning: Airtable credentials not configured. Skipping upload.")
         return None
 
     try:
-
         json_data = json.loads(json_file)
 
         api = Api(airtable_api_key)
-        created_records = {}
+        catalog_name = None
 
-        # Store record IDs for linking
-        account_record_id = None
-        contact_record_id = None
-        agreement_name = None
-
-        # Extract Agreement Name for use in Contract fields
-        if "Details" in json_data and "Agreement Name" in json_data["Details"]:
-            agreement_name_data = json_data["Details"]["Agreement Name"]
-            if isinstance(agreement_name_data, dict) and "Extracted Value" in agreement_name_data:
-                agreement_name = agreement_name_data["Extracted Value"]
+        # Extract Catalog name for logging
+        if "Catalog" in json_data:
+            catalog_data = json_data["Catalog"]
+            if isinstance(catalog_data, dict) and "Extracted Value" in catalog_data:
+                catalog_name = catalog_data["Extracted Value"]
             else:
-                agreement_name = agreement_name_data
+                catalog_name = catalog_data
 
-        print(f"\n📤 Uploading {filename} to Airtable...")
+        print(f"\n📤 Uploading {filename} to Airtable table '{airtable_table_name}'...")
         print("=" * 50)
 
-        # First pass: Create Account and Contacts to get their record IDs
-        for table_name in ["Account", "Contacts"]:
-            if table_name not in json_data:
-                continue
+        # Flatten all fields into a single record
+        record_data = flatten_extracted_data(json_data)
 
-            try:
-                table_data = json_data[table_name].copy()
+        # Add Links field if contract_id is provided
+        if contract_id:
+            record_data["Links"] = f"http://52.203.82.123/get_contract/{contract_id}"
 
-                # Handle table name mapping
-                airtable_table_name = table_name
+        # Upload to the single table
+        table = api.table(airtable_base_id, airtable_table_name)
+        
+        try:
+            record = table.create(record_data)
+            print(f"  ✓ Record created (ID: {record['id']})")
+            print("=" * 50)
+            print(f"✓ Successfully uploaded to '{airtable_table_name}'\n")
 
-                # Get the Airtable table
-                table = api.table(airtable_base_id, airtable_table_name)
-
-                # Flatten the nested structure
-                record_data = flatten_extracted_data(table_data)
-
-                # Apply field-specific rules
-                if table_name == "Account":
-                    # Remove Contacts and Details fields
-                    record_data.pop("Contacts", None)
-                    record_data.pop("Details", None)
-                elif table_name == "Contacts":
-                    # Remove Full Name field
-                    record_data.pop("Full Name", None)
-
-                # Create the record in Airtable
-                record = table.create(record_data)
-                created_records[airtable_table_name] = record
-
-                # Store record IDs for linking
-                if table_name == "Account":
-                    account_record_id = record['id']
-                elif table_name == "Contacts":
-                    contact_record_id = record['id']
-
-                print(f"  ✓ {airtable_table_name}: Record created (ID: {record['id']})")
-                record_id[airtable_table_name] = record['id']
-
-            except Exception as table_error:
-                print(f"  ✗ {airtable_table_name}: {str(table_error)}")
-                continue
-
-        # Second pass: Create remaining tables with proper linking
-        for table_name, table_data in json_data.items():
-            # Skip already processed tables
-            if table_name in ["Account", "Contacts"]:
-                continue
-
-            # Handle table name mapping
-            airtable_table_name = table_name
-            if table_name == "R & A":
-                airtable_table_name = "Royalties & Accounting"
-
-            try:
-                # Get the Airtable table
-                table = api.table(airtable_base_id, airtable_table_name)
-
-                # Flatten the nested structure
-                record_data = flatten_extracted_data(table_data.copy())
-
-                # Add Contract field to specific tables
-                if table_name in ["Registration Information", "General Information", 
-                                  "Licensing Approvals", "R & A", "Documents"]:
-                    if agreement_name:
-                        record_data["Contract"] = agreement_name
-                        print(f"  → Adding Contract field: {agreement_name}")
-
-                # Add linking fields
-                if table_name == "Details" and account_record_id:
-                    record_data["Contracted Writer Party"] = [account_record_id]
-
-                if table_name == "Registration Information":
-                    if contact_record_id:
-                        record_data["Writer's Name"] = [contact_record_id]
-
-                # Create the record in Airtable
-                record = table.create(record_data)
-                created_records[airtable_table_name] = record
-
-                print(f"  ✓ {airtable_table_name}: Record created (ID: {record['id']})")
-                record_id[airtable_table_name] = record['id']
-
-            except Exception as table_error:
-                print(f"  ✗ {airtable_table_name}: {str(table_error)}")
-                continue
-
-        # Add Account Name linking to Contacts table if both exist
-        if account_record_id and contact_record_id:
-            try:
-                contacts_table = api.table(airtable_base_id, "Contacts")
-                contacts_table.update(contact_record_id, {"Account Name": [account_record_id]})
-                print(f"  ✓ Contacts: Linked to Account (ID: {account_record_id})")
-            except Exception as e:
-                print(f"  ✗ Contacts: Failed to link Account - {str(e)}")
-
-        print("=" * 50)
-        print(f"✓ Successfully uploaded to {len(created_records)}/{len(json_data)} tables\n")
-
-        # Return both record_id and agreement_name
-        return {
-            "record_id": record_id,
-            "agreement_name": agreement_name
-        }
+            return {
+                "record_id": {airtable_table_name: record['id']},
+                "agreement_name": catalog_name
+            }
+        except Exception as upload_error:
+            # If upload fails, try to identify which field is problematic
+            print(f"\n✗ Initial upload failed: {str(upload_error)}")
+            print("\n🔍 Testing individual fields to identify the problematic one(s)...")
+            print("=" * 50)
+            
+            problematic_fields = []
+            working_fields = {}
+            
+            # Test each field individually
+            for field_name, field_value in record_data.items():
+                try:
+                    test_data = {field_name: field_value}
+                    table.create(test_data)
+                    # If successful, delete the test record and mark field as working
+                    working_fields[field_name] = field_value
+                    print(f"  ✓ {field_name}: OK")
+                except Exception as field_error:
+                    problematic_fields.append({
+                        "field": field_name,
+                        "value": field_value,
+                        "error": str(field_error)
+                    })
+                    print(f"  ✗ {field_name}: FAILED")
+                    print(f"     Value: {field_value}")
+                    print(f"     Error: {str(field_error)}")
+            
+            print("=" * 50)
+            
+            if problematic_fields:
+                print(f"\n⚠ Found {len(problematic_fields)} problematic field(s):")
+                for pf in problematic_fields:
+                    print(f"  - {pf['field']}: {pf['value']}")
+                
+                # Try uploading without problematic fields
+                if working_fields:
+                    print(f"\n🔄 Attempting upload with only working fields ({len(working_fields)} fields)...")
+                    try:
+                        record = table.create(working_fields)
+                        print(f"  ✓ Partial record created (ID: {record['id']})")
+                        print(f"  ⚠ Skipped {len(problematic_fields)} problematic field(s)")
+                        print("=" * 50)
+                        
+                        return {
+                            "record_id": {airtable_table_name: record['id']},
+                            "agreement_name": catalog_name,
+                            "skipped_fields": [pf['field'] for pf in problematic_fields]
+                        }
+                    except Exception as partial_error:
+                        print(f"  ✗ Partial upload also failed: {str(partial_error)}")
+            
+            return None
 
     except Exception as e:
         print(f"✗ Error uploading to Airtable: {str(e)}")
-        print(f"   Base ID: {airtable_base_id}")
+        print(f"   Base ID: {airtable_base_id}, Table: {airtable_table_name}")
         return None
 
 
-def update_amendment_changes_table(
-    frontend_url,
-    contract_id,
-    agreement_name=None,
-    airtable_api_key=None,
-    airtable_base_id=None,
-    table_name="Contract Utilities"
-):
-    """
-    Update the Contract Utilities table in Airtable with the contract_id.
-    If the 'Links' column doesn't exist, it will be created automatically
-    when the first record is inserted.
+# def update_amendment_changes_table(
+#     frontend_url,
+#     contract_id,
+#     agreement_name=None,
+#     airtable_api_key=None,
+#     airtable_base_id=None,
+#     table_name="Contract Utilities"
+# ):
+#     """
+#     Update the Contract Utilities table in Airtable with the contract_id.
+#     If the 'Links' column doesn't exist, it will be created automatically
+#     when the first record is inserted.
 
-    Args:
-        frontend_url: Frontend URL for constructing the link
-        contract_id: The contract ID to add to the Links column
-        agreement_name: The agreement name to add to the Contract column
-        airtable_api_key: Airtable API key
-        airtable_base_id: Airtable Base ID
-        table_name: Name of the table (default: "Contract Utilities")
+#     Args:
+#         frontend_url: Frontend URL for constructing the link
+#         contract_id: The contract ID to add to the Links column
+#         agreement_name: The agreement name to add to the Contract column
+#         airtable_api_key: Airtable API key
+#         airtable_base_id: Airtable Base ID
+#         table_name: Name of the table (default: "Contract Utilities")
 
-    Returns:
-        Record ID if successful, None otherwise
-    """
-    if not all([airtable_api_key, airtable_base_id, contract_id]):
-        print("Warning: Missing required parameters for Contract Utilities update.")
-        return None
+#     Returns:
+#         Record ID if successful, None otherwise
+#     """
+#     if not all([airtable_api_key, airtable_base_id, contract_id]):
+#         print("Warning: Missing required parameters for Contract Utilities update.")
+#         return None
 
-    try:
-        api = Api(airtable_api_key)
-        table = api.table(airtable_base_id, table_name)
-        link = f"{frontend_url}/{contract_id}"
+#     try:
+#         api = Api(airtable_api_key)
+#         table = api.table(airtable_base_id, table_name)
+#         link = f"{frontend_url}/{contract_id}"
 
-        # Create record with contract_id in Links field and agreement_name in Contract field
-        record_data = {
-            "Link": link,
-            "Amendment Changes": ""  # Leave empty as specified
-        }
+#         # Create record with contract_id in Links field and agreement_name in Contract field
+#         record_data = {
+#             "Link": link,
+#             "Amendment Changes": ""  # Leave empty as specified
+#         }
 
-        # Add Contract field if agreement_name is provided
-        if agreement_name:
-            record_data["Contract"] = agreement_name
-            print(f"  → Adding Contract field to Contract Utilities: {agreement_name}")
+#         # Add Contract field if agreement_name is provided
+#         if agreement_name:
+#             record_data["Contract"] = agreement_name
+#             print(f"  → Adding Contract field to Contract Utilities: {agreement_name}")
 
-        # Create new record
-        record = table.create(record_data)
-        print(f"✓ Contract Utilities: Added contract_id {contract_id} (Record ID: {record['id']})")
-        return record['id']
+#         # Create new record
+#         record = table.create(record_data)
+#         print(f"✓ Contract Utilities: Added contract_id {contract_id} (Record ID: {record['id']})")
+#         return record['id']
 
-    except Exception as e:
-        print(f"✗ Error updating Contract Utilities table: {str(e)}")
-        return None
+#     except Exception as e:
+#         print(f"✗ Error updating Contract Utilities table: {str(e)}")
+#         return None
 
 
-# Template for Concord contracts
+# Template for PW APA contracts (flat - all fields map to columns in a single Airtable table)
 concord_template = {
-  "Account": {
-    "Account Name": "",
-    "Type": "",
-    "Description": "",
-    "Billing Street": "",
-    "Billing City": "",
-    "Billing Zip/Postal Code": "",
-    "Billing State/Province": "",
-    "Billing Country": ""
+  "General": {
+    "Catalog": "",
+    "General Rights Tags": "",
+    "Acquisition Summary": "",
+    "Rights Status": "",
+    "Additional Acquisition Summary Details": "",
+    "Date of Acquisition Agreement": "",
+    "Cash Date": "",
+    "PW Business Affairs Contact": "",
+    "PW Outside Counsel": "",
+    "Seller Parties (Individual)": "",
+    "Seller Parties (Other)": "",
+    "Seller Counsel": "",
+    "Seller Personal Manager": "",
+    "Seller Business Manager": "",
+    "Purchaser": "",
+    "Holdbacks": "",
+    "Right of First Negotiation / Matching Rights": "",
+    "Additional Purchase Price": "",
+    "Press Releases / Public Announcements": "",
+    "Restrictions on Seller": "",
+    "Additional Purchaser Obligations": "",
+    "Additional Seller Obligations": "",
+    "Governing Law of Acquisition Agreement": "",
+    "Jurisdiction and Venue for Acquisition Agreement Disputes": "",
+    "Indemnification": "",
+    "Additional Notes": "",
   },
-  "Contacts": {
-    "First Name": "",
-    "Last Name": ""
+  "Asset Details": {
+    "PW Acquired Interest (%)": "",
+    "Seller Retained Interest (%)": "",
+    "Rights Acquired (By Type)": "",
+    "Excluded Assets and/or Excluded Rights": "",
+    "Income Sources": "",
+    "Current PRO": "",
+    "Current NRO": "",
+    "Current Trademark Portfolio": "",
   },
-  "Details": {
-    "Concord Party": "",
-    "Agreement Name": "",
-    "Currency": "",
-    "Commitment End Date": "",
-    "Agreement Type": "",
-    "Assignability of Contract": "",
-    "Assignability of Contract Details": "",
-    "Change of Control": "",
-    "Change of Control Details": "",
-    "Key Person Provision": "",
-    "Key Person Provision Details": ""
+  "Post-Closing Asset Management": {
+    "Go-Forward Arrangements": "",
+    "Possible Additional Rights": "",
+    "Exclusivity Restrictions": "",
+    "Other (Post-Closing)": "",
   },
-  "Documents": {
-    "Schedule A Received": ""
+  "Distribution Details": {
+    "Distribution Rights Acquired": "",
+    "PW Rights of Distribution Start Date": "",
+    "Acquired Rights of Distribution Territory": "",
+    "Current Distributor": "",
+    "Current Distributor Governing Agreement": "",
+    "Termination Notice Required": "",
+    "Videos Included": "",
+    "Other PW Distribution Obligations": "",
   },
-  "General Information": {
-    "Effective Date": "",
-    "Execution Date": "",
-    "Territory": "",
-    "Other Territory": "",
-    "Excluded Territories": "",
-    "Term Definition": "",
-    "Number of Contract Periods": "",
-    "Other number of Contract Periods": "",
-    "Are there Options?": "",
-    "Length of Each Contract Period": "",
-    "Minimum Delivery Commitment?": "",
-    "Minimum Delivery Commitment Amount": "",
-    "Minimum Delivery Release Commitment?": "",
-    "Min Delivery Release Commitment Amount": "",
-    "Catalog (Full / Partial)": "",
-    "All Songs Written During Term": "",
-    "All Songs Acquired during Term": "",
-    "All Songs Prior to Term": "",
-    "Only Songs on Artist's Album": "",
-    "[Prior] Pass-Through Income Included in Concord": "No",
-    "Rights Granted: Assignment Copyrights": "",
-    "Rights Granted: General": "",
-    "Rights Granted: Master Representation": "",
-    "Rights Granted: Sync Camp": "",
-    "Rights Granted: Demos": "",
-    "Rights Excluded": "",
-    "Right of First Negotiation / Match Right": "",
-    "Choice of Law": "",
-    "Choice of Law - Other": ""
+  "Approval Details": {
+    "PW Obligation to Obtain Seller Approval (Outgoing)": "",
+    "Approval Procedure": "",
+    "Seller Approval Contact": "",
   },
-  "Licensing Approvals": {
-    "Licensing Approval Notes": "",
-    "Licensing: Any ad for personal hygiene, firearms or tobacco products": "",
-    "Licensing: Any political or religious use": "",
-    "Licensing: Samples and interpolations": "",
-    "Licensing: Fundamental adaptations / translations / etc. to music, lyrics, title, or harmonic structure": "",
-    "Licensing: Issue blanket licenses including the Comps": "",
-    "Licensing: Licence the Compositions for period with extends beyond the Rights Period": "",
-    "Name & Likeness Approval Notes": "",
-    "Name & Likeness Approvals": "",
-    "Sync Master Rep Approval Notes": "",
-    "Synchronization: Films, Television Programmes, Advertisements, Computer Games, Interactive Devices, Videos": "",
-    "Miscellaneous Licensing Notes": "",
-    "Print: Print, publish and vend, and license the same": "",
-    "Mechanical: Issue \"first use\" mechanical licenses": "",
-    "Mechanical: Issue mechanical reproduction licenses at less than full statutory rate for the US": "",
-    "Performance: Grand rights licenses and right to dramatize": "",
-    "Terms of Approval for Licensing": ""
+  "Accounting & Audit": {
+    "Accounting Frequency to Seller": "",
+    "Accounting Lag to Seller": "",
+    "Seller Statement Recipient(s)": "",
+    "Other Royalty Participants (Companies)": "",
+    "Other Royalty Participants (Individuals)": "",
+    "Seller Rights to Audit PW": "",
+    "Pre-Closing Audits by Seller": "",
   },
-  "R & A": {
-    "Royalty Basis": "",
-    "Definition of Royalty Basis": "",
-    "Definition of Gross Income": "",
-    "At Source": "",
-    "Frequency of Accounting / Statements": "",
-    "Payments/Statements Due within": "",
-    "Agreement Royalties": "",
-    "General Master Rep Royalty": "",
-    "Camp Master Rep Royalty": "",
-    "Royalty Escalation": "",
-    "Retroactive Collection": ""
+  "Seller Retained Interest Financial Terms": {
+    "Percentage of Revenue Received by PW": "",
+    "Seller Retained Interest Percentage": "",
+    "Other Payable Percentages": "",
+    "PW Administration Fee": "",
+    "PW Distribution Fee": "",
   },
-  "Registration Information": {
-    "Writer(s) CAE/IPI Name": "",
-    "Writer(s) CAE/IPI Number": "",
-    "Publishing Designee(s) IPI Number": "",
-    "Publishing Designee(s) IPI Name": "",
-    "Performing Rights Organization": "",
-    "Other Performing Rights Organization": ""
-  }
+  
 }

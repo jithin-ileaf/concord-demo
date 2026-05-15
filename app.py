@@ -28,10 +28,8 @@ from utils import (
     extract_text_with_positions,
 )
 from post_processing import (
-    update_extracted_value,
     populate_template,
     upload_to_airtable,
-    update_amendment_changes_table,
     concord_template
 )
 
@@ -70,6 +68,7 @@ app.add_middleware(
 # Airtable
 AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
+AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
 
 # AWS S3
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -266,129 +265,48 @@ def update_mongodb_and_airtable(
             from post_processing import flatten_extracted_data
 
             api = Api(AIRTABLE_API_KEY)
-            updated_tables = []
+            
+            print(f"\n📤 Updating Airtable record...")
+            print("=" * 50)
 
-            # Store record IDs for linking
-            account_record_id = None
-            contact_record_id = None
-            agreement_name = None
-
-            # Extract Agreement Name for use in Contract fields
-            if "Details" in json_data and "Agreement Name" in json_data["Details"]:
-                agreement_name_data = json_data["Details"]["Agreement Name"]
-                if isinstance(agreement_name_data, dict) and "Extracted Value" in agreement_name_data:
-                    agreement_name = agreement_name_data["Extracted Value"]
-                else:
-                    agreement_name = agreement_name_data
-
-            # First pass: Update Account and Contacts to get their record IDs
-            for table_name in ["Account", "Contacts"]:
-                if table_name not in json_data or table_name not in record_id:
-                    continue
-
+            # Get the table name and record ID from record_id
+            # Format: {"APA (Cole)": "rec123456"}
+            if not record_id:
+                print("⚠ No Airtable record ID found in MongoDB")
+                result["airtable_updated"] = False
+            else:
+                # Get the first (and only) table name and record ID
+                table_name = list(record_id.keys())[0]
+                airtable_record_id = record_id[table_name]
+                
                 try:
-                    table_data = json_data[table_name].copy()
-                    airtable_record_id = record_id[table_name]
-
+                    # Flatten the JSON data (removes categories, keeps individual fields)
+                    flattened_data = flatten_extracted_data(json_data)
+                    
+                    # Remove Links field (should not be updated by reviewer)
+                    flattened_data.pop("Links", None)
+                    
+                    print(f"  → Table: {table_name}")
+                    print(f"  → Record ID: {airtable_record_id}")
+                    print(f"  → Fields to update: {len(flattened_data)}")
+                    
                     # Get the Airtable table
                     table = api.table(AIRTABLE_BASE_ID, table_name)
-
-                    # Flatten the nested structure
-                    flattened_data = flatten_extracted_data(table_data)
-
-                    # Apply field-specific rules
-                    if table_name == "Account":
-                        # Remove Contacts and Details fields
-                        flattened_data.pop("Contacts", None)
-                        flattened_data.pop("Details", None)
-                        account_record_id = airtable_record_id
-                    elif table_name == "Contacts":
-                        # Remove Full Name field
-                        flattened_data.pop("Full Name", None)
-                        contact_record_id = airtable_record_id
-
+                    
                     # Update the record
                     table.update(airtable_record_id, flattened_data)
-                    updated_tables.append(table_name)
-                    print(f"✓ Airtable updated: {table_name} "
-                          f"(Record ID: {airtable_record_id})")
-
-                except Exception as table_error:
-                    print(f"✗ Error updating Airtable table "
-                          f"{table_name}: {table_error}")
-                    continue
-
-            # Second pass: Update remaining tables with proper linking
-            for table_name in json_data.keys():
-                # Skip already processed tables
-                if table_name in ["Account", "Contacts"]:
-                    continue
-
-                # Handle table name mapping
-                airtable_table_name = table_name
-                if table_name == "R & A":
-                    airtable_table_name = "Royalties & Accounting"
-
-                # Check if this table was originally created
-                if airtable_table_name not in record_id:
-                    continue
-
-                try:
-                    airtable_record_id = record_id[airtable_table_name]
-                    table_data = json_data[table_name].copy()
-
-                    # Get the Airtable table
-                    table = api.table(AIRTABLE_BASE_ID, airtable_table_name)
-
-                    # Flatten the nested structure
-                    flattened_data = flatten_extracted_data(table_data)
-
-                    # Add Contract field to specific tables
-                    if table_name in ["Registration Information", "General Information", 
-                                      "Licensing Approvals", "R & A", "Documents"]:
-                        if agreement_name:
-                            flattened_data["Contract"] = agreement_name
-                            print(f"  → Adding Contract field: {agreement_name}")
-
-                    # Add linking fields
-                    if table_name == "Details" and account_record_id:
-                        flattened_data["Contracted Writer Party"] = [account_record_id]
-
-                    if table_name == "Registration Information":
-                        if contact_record_id:
-                            flattened_data["Writer's Name"] = [contact_record_id]
-
-                    # Update the record
-                    table.update(airtable_record_id, flattened_data)
-                    updated_tables.append(airtable_table_name)
-                    print(f"✓ Airtable updated: {airtable_table_name} "
-                          f"(Record ID: {airtable_record_id})")
-
-                except Exception as table_error:
-                    print(f"✗ Error updating Airtable table "
-                          f"{airtable_table_name}: {table_error}")
-                    continue
-
-            # Add Account Name linking to Contacts table if both exist
-            if account_record_id and contact_record_id and "Contacts" in record_id:
-                try:
-                    contacts_table = api.table(AIRTABLE_BASE_ID, "Contacts")
-                    contacts_table.update(contact_record_id, {"Account Name": [account_record_id]})
-                    print(f"  ✓ Contacts: Linked to Account (ID: {account_record_id})")
-                except Exception as e:
-                    print(f"  ✗ Contacts: Failed to link Account - {str(e)}")
-
-            # Update Contract Utilities table's Contract field if it exists and agreement_name changed
-            if amendment_changes_record_id and agreement_name:
-                try:
-                    amendment_table = api.table(AIRTABLE_BASE_ID, "Contract Utilities")
-                    amendment_table.update(amendment_changes_record_id, {"Contract": agreement_name})
-                    print(f"  ✓ Contract Utilities: Updated Contract field to '{agreement_name}' (ID: {amendment_changes_record_id})")
-                except Exception as e:
-                    print(f"  ✗ Contract Utilities: Failed to update Contract field - {str(e)}")
-
-            result["airtable_updated"] = len(updated_tables) > 0
-            result["updated_tables"] = updated_tables
+                    
+                    print(f"  ✓ Successfully updated Airtable record")
+                    print("=" * 50)
+                    
+                    result["airtable_updated"] = True
+                    result["updated_tables"] = [table_name]
+                    
+                except Exception as airtable_error:
+                    print(f"  ✗ Error updating Airtable: {str(airtable_error)}")
+                    print("=" * 50)
+                    result["airtable_updated"] = False
+                    result["airtable_error"] = str(airtable_error)
 
         return result
 
@@ -454,13 +372,45 @@ def process_single_pdf(
             ]
         )
 
-        # Parse response
-        response_data = response.text.strip()
-        response_data = json.loads(response_data)
+        # Parse response with robust JSON extraction
+        response_text = response.text.strip()
+        
+        # Try to extract JSON from markdown code blocks or plain text
+        try:
+            # First, try direct parsing
+            response_data = json.loads(response_text)
+        except json.JSONDecodeError:
+            # Try to find JSON in markdown code blocks
+            import re
+            json_pattern = r'```(?:json)?\s*([\s\S]*?)\s*```'
+            matches = re.findall(json_pattern, response_text)
+            
+            if matches:
+                # Try each match until one parses successfully
+                for match in matches:
+                    try:
+                        response_data = json.loads(match.strip())
+                        break
+                    except json.JSONDecodeError:
+                        continue
+                else:
+                    # If no match worked, raise the original error
+                    raise ValueError(f"Could not parse JSON from response. Raw response: {response_text[:500]}")
+            else:
+                # Try to find JSON object in the text (starts with { and ends with })
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}')
+                
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    potential_json = response_text[start_idx:end_idx+1]
+                    response_data = json.loads(potential_json)
+                else:
+                    raise ValueError(f"No JSON object found in response. Raw response: {response_text[:500]}")
+        
         result["llm_time"] = time() - llm_start
 
         # Post-processing
-        response_data = update_extracted_value(json_data=response_data)
+        # response_data = update_extracted_value(json_data=response_data)
         response_data = populate_template(
             template=concord_template,
             source=response_data
@@ -476,15 +426,21 @@ def process_single_pdf(
         result["actual_json"] = response_data
         result["status"] = "success"
 
+        # Generate contract_id early (needed for Airtable Links field)
+        contract_id = str(uuid.uuid4())
+        result["contract_id"] = contract_id
+
         # Upload to Airtable if configured
         airtable_record = None
         agreement_name = None
-        if AIRTABLE_API_KEY and AIRTABLE_BASE_ID:
+        if AIRTABLE_API_KEY and AIRTABLE_BASE_ID and AIRTABLE_TABLE_NAME:
             airtable_result = upload_to_airtable(
                 filename=filename,
                 json_file=json_text,
                 airtable_api_key=AIRTABLE_API_KEY,
                 airtable_base_id=AIRTABLE_BASE_ID,
+                airtable_table_name=AIRTABLE_TABLE_NAME,
+                contract_id=contract_id,
             )
             if airtable_result:
                 airtable_record = airtable_result.get("record_id", {})
@@ -500,27 +456,24 @@ def process_single_pdf(
 
         # Save to MongoDB if configured
         if mongo_collection is not None and s3_url:
-            contract_id = str(uuid.uuid4())
-            
             # Update Contract Utilities table in Airtable with contract_id
-            amendment_record_id = None
-            if AIRTABLE_API_KEY and AIRTABLE_BASE_ID:
-                amendment_record_id = update_amendment_changes_table(
-                    frontend_url=FRONTEND_URL,
-                    contract_id=contract_id,
-                    agreement_name=agreement_name,
-                    airtable_api_key=AIRTABLE_API_KEY,
-                    airtable_base_id=AIRTABLE_BASE_ID
-                )
-                result["amendment_changes_record_id"] = amendment_record_id
+            # amendment_record_id = None
+            # if AIRTABLE_API_KEY and AIRTABLE_BASE_ID:
+            #     amendment_record_id = update_amendment_changes_table(
+            #         frontend_url=FRONTEND_URL,
+            #         contract_id=contract_id,
+            #         agreement_name=agreement_name,
+            #         airtable_api_key=AIRTABLE_API_KEY,
+            #         airtable_base_id=AIRTABLE_BASE_ID
+            #     )
+            #     result["amendment_changes_record_id"] = amendment_record_id
             
             mongodb_id = save_to_mongodb(
                 contract_id=contract_id,
                 file_name=filename,
                 s3_link=s3_url,
                 record_id=airtable_record or {},
-                actual_json=response_data,
-                amendment_changes_record_id=amendment_record_id
+                actual_json=response_data
             )
             result["contract_id"] = contract_id
             result["mongodb_id"] = mongodb_id
