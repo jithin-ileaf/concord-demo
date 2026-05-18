@@ -73,6 +73,23 @@ def flatten_extracted_data(data_dict):
 
     flattened = {}
 
+    def clean_value(value):
+        """
+        Clean extracted values by removing trailing punctuation and
+        normalizing common patterns.
+        """
+        if not isinstance(value, str):
+            return value
+        
+        # Strip whitespace
+        cleaned = value.strip()
+        
+        # Remove trailing periods, commas, semicolons
+        while cleaned and cleaned[-1] in '.,:;':
+            cleaned = cleaned[:-1].strip()
+        
+        return cleaned
+
     def process_field(field_name, field_data):
         """Helper function to process a single field."""
         # Skip fields that are in the skip list
@@ -81,21 +98,25 @@ def flatten_extracted_data(data_dict):
 
         if isinstance(field_data, dict) and "Extracted Value" in field_data:
             extracted_value = field_data["Extracted Value"]
+            
+            # Clean the extracted value
+            if isinstance(extracted_value, str):
+                extracted_value = clean_value(extracted_value)
 
             # Handle multi-select fields - convert to array if not already
             if field_name in multi_select_fields:
                 if isinstance(extracted_value, str):
                     if extracted_value and extracted_value != "N/A":
                         # Split on newlines and strip whitespace from each tag
-                        items = [v.strip() for v in extracted_value.split("\n") if v.strip() and v.strip() != "N/A"]
+                        items = [clean_value(v) for v in extracted_value.split("\n") if v.strip() and clean_value(v) != "N/A"]
                         if items:
                             flattened[field_name] = items
                     # Skip empty or N/A values for multi-select
                 elif isinstance(extracted_value, list):
-                    # Already an array
-                    flattened[field_name] = extracted_value
+                    # Already an array - clean each item
+                    flattened[field_name] = [clean_value(v) if isinstance(v, str) else v for v in extracted_value]
             else:
-                # Store the extracted value directly
+                # Store the cleaned extracted value directly
                 flattened[field_name] = extracted_value
         elif isinstance(field_data, dict):
             # Recursively process nested dictionaries (categories)
@@ -170,55 +191,44 @@ def upload_to_airtable(filename, json_file, airtable_api_key=None, airtable_base
                 "agreement_name": catalog_name
             }
         except Exception as upload_error:
-            # If upload fails, try to identify which field is problematic
-            print(f"\n✗ Initial upload failed: {str(upload_error)}")
-            print("\n🔍 Testing individual fields to identify the problematic one(s)...")
+            # If upload fails, provide detailed error information
+            error_str = str(upload_error)
+            print(f"\n✗ Upload failed: {error_str}")
             print("=" * 50)
             
-            problematic_fields = []
-            working_fields = {}
+            # Try to extract field name from error message
+            import re
+            field_match = re.search(r'Field "([^"]+)"', error_str)
             
-            # Test each field individually
-            for field_name, field_value in record_data.items():
-                try:
-                    test_data = {field_name: field_value}
-                    table.create(test_data)
-                    # If successful, delete the test record and mark field as working
-                    working_fields[field_name] = field_value
-                    print(f"  ✓ {field_name}: OK")
-                except Exception as field_error:
-                    problematic_fields.append({
-                        "field": field_name,
-                        "value": field_value,
-                        "error": str(field_error)
-                    })
-                    print(f"  ✗ {field_name}: FAILED")
-                    print(f"     Value: {field_value}")
-                    print(f"     Error: {str(field_error)}")
-            
-            print("=" * 50)
-            
-            if problematic_fields:
-                print(f"\n⚠ Found {len(problematic_fields)} problematic field(s):")
-                for pf in problematic_fields:
-                    print(f"  - {pf['field']}: {pf['value']}")
+            if field_match:
+                problematic_field = field_match.group(1)
+                print(f"\n⚠ Problematic field identified: {problematic_field}")
                 
-                # Try uploading without problematic fields
-                if working_fields:
-                    print(f"\n🔄 Attempting upload with only working fields ({len(working_fields)} fields)...")
+                if problematic_field in record_data:
+                    print(f"   Value: {record_data[problematic_field]}")
+                    print(f"\n🔄 Attempting upload without the problematic field...")
+                    
+                    # Remove the problematic field and try again
+                    cleaned_data = {k: v for k, v in record_data.items() if k != problematic_field}
+                    
                     try:
-                        record = table.create(working_fields)
-                        print(f"  ✓ Partial record created (ID: {record['id']})")
-                        print(f"  ⚠ Skipped {len(problematic_fields)} problematic field(s)")
+                        record = table.create(cleaned_data)
+                        print(f"  ✓ Record created (ID: {record['id']})")
+                        print(f"  ⚠ Skipped field: {problematic_field}")
                         print("=" * 50)
                         
                         return {
                             "record_id": {airtable_table_name: record['id']},
                             "agreement_name": catalog_name,
-                            "skipped_fields": [pf['field'] for pf in problematic_fields]
+                            "skipped_fields": [problematic_field],
+                            "warning": f"Field '{problematic_field}' was skipped due to error"
                         }
-                    except Exception as partial_error:
-                        print(f"  ✗ Partial upload also failed: {str(partial_error)}")
+                    except Exception as retry_error:
+                        print(f"  ✗ Retry also failed: {str(retry_error)}")
+                        print("=" * 50)
+            else:
+                print("\n⚠ Could not identify specific problematic field from error")
+                print("=" * 50)
             
             return None
 

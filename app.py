@@ -235,6 +235,14 @@ def update_mongodb_and_airtable(
         record_id = document.get("record_id", {})
         file_name = document.get("file_name", "unknown")
         amendment_changes_record_id = document.get("amendment_changes_record_id")
+        
+        # Debug logging
+        print(f"\n🔍 Debug Info:")
+        print(f"  → record_id from MongoDB: {record_id}")
+        print(f"  → record_id type: {type(record_id)}")
+        print(f"  → record_id is truthy: {bool(record_id)}")
+        print(f"  → AIRTABLE_API_KEY exists: {bool(AIRTABLE_API_KEY)}")
+        print(f"  → AIRTABLE_BASE_ID exists: {bool(AIRTABLE_BASE_ID)}")
 
         # Update MongoDB with new JSON data
         update_data = {
@@ -260,7 +268,19 @@ def update_mongodb_and_airtable(
         print(f"  → Matched: {update_result.matched_count}, Modified: {update_result.modified_count}")
 
         # Update Airtable if configured and record_id exists
-        if AIRTABLE_API_KEY and AIRTABLE_BASE_ID and record_id:
+        print(f"\n🔍 Checking Airtable update conditions...")
+        
+        if not AIRTABLE_API_KEY:
+            print("⚠ Airtable API key not configured")
+            result["airtable_error"] = "Airtable API key not configured"
+        elif not AIRTABLE_BASE_ID:
+            print("⚠ Airtable Base ID not configured")
+            result["airtable_error"] = "Airtable Base ID not configured"
+        elif not record_id or not isinstance(record_id, dict) or len(record_id) == 0:
+            print(f"⚠ No valid Airtable record ID found in MongoDB")
+            print(f"   record_id value: {record_id}")
+            result["airtable_error"] = "No valid Airtable record ID in MongoDB"
+        else:
             from pyairtable import Api
             from post_processing import flatten_extracted_data
 
@@ -271,42 +291,38 @@ def update_mongodb_and_airtable(
 
             # Get the table name and record ID from record_id
             # Format: {"APA (Cole)": "rec123456"}
-            if not record_id:
-                print("⚠ No Airtable record ID found in MongoDB")
-                result["airtable_updated"] = False
-            else:
+            try:
                 # Get the first (and only) table name and record ID
                 table_name = list(record_id.keys())[0]
                 airtable_record_id = record_id[table_name]
                 
-                try:
-                    # Flatten the JSON data (removes categories, keeps individual fields)
-                    flattened_data = flatten_extracted_data(json_data)
-                    
-                    # Remove Links field (should not be updated by reviewer)
-                    flattened_data.pop("Links", None)
-                    
-                    print(f"  → Table: {table_name}")
-                    print(f"  → Record ID: {airtable_record_id}")
-                    print(f"  → Fields to update: {len(flattened_data)}")
-                    
-                    # Get the Airtable table
-                    table = api.table(AIRTABLE_BASE_ID, table_name)
-                    
-                    # Update the record
-                    table.update(airtable_record_id, flattened_data)
-                    
-                    print(f"  ✓ Successfully updated Airtable record")
-                    print("=" * 50)
-                    
-                    result["airtable_updated"] = True
-                    result["updated_tables"] = [table_name]
-                    
-                except Exception as airtable_error:
-                    print(f"  ✗ Error updating Airtable: {str(airtable_error)}")
-                    print("=" * 50)
-                    result["airtable_updated"] = False
-                    result["airtable_error"] = str(airtable_error)
+                # Flatten the JSON data (removes categories, keeps individual fields)
+                flattened_data = flatten_extracted_data(json_data)
+                
+                # Remove Links field (should not be updated by reviewer)
+                flattened_data.pop("Links", None)
+                
+                print(f"  → Table: {table_name}")
+                print(f"  → Record ID: {airtable_record_id}")
+                print(f"  → Fields to update: {len(flattened_data)}")
+                
+                # Get the Airtable table
+                table = api.table(AIRTABLE_BASE_ID, table_name)
+                
+                # Update the record
+                table.update(airtable_record_id, flattened_data)
+                
+                print(f"  ✓ Successfully updated Airtable record")
+                print("=" * 50)
+                
+                result["airtable_updated"] = True
+                result["updated_tables"] = [table_name]
+                
+            except Exception as airtable_error:
+                print(f"  ✗ Error updating Airtable: {str(airtable_error)}")
+                print("=" * 50)
+                result["airtable_updated"] = False
+                result["airtable_error"] = str(airtable_error)
 
         return result
 
@@ -689,8 +705,16 @@ async def reviewer_submit(request: ReviewerSubmitRequest = Body(...)):
             "contract_id": contract_id,
             "mongodb_updated": result["mongodb_updated"],
             "airtable_updated": result["airtable_updated"],
-            "updated_tables": result.get("updated_tables", [])
+            "updated_tables": result.get("updated_tables", []),
+            "airtable_error": result.get("airtable_error"),  # Include Airtable error if exists
+            "warnings": []
         }
+        
+        # Add warning if Airtable didn't update
+        if not result["airtable_updated"] and result.get("airtable_error"):
+            response_data["warnings"].append(
+                f"Airtable update failed: {result.get('airtable_error')}"
+            )
 
         return JSONResponse(content=response_data, status_code=200)
 
