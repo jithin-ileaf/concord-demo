@@ -53,6 +53,8 @@ def flatten_extracted_data(data_dict):
     Flatten nested JSON structure for Airtable upload.
     Recursively extracts all fields from nested categories and converts them 
     into a flat dictionary with field names and extracted values.
+    
+    Applies proper type conversions for numeric fields to ensure Airtable compatibility.
 
     Args:
         data_dict: Dictionary containing nested field data (with categories like "General", "Asset Details", etc.)
@@ -60,16 +62,21 @@ def flatten_extracted_data(data_dict):
     Returns:
         Flattened dictionary ready for Airtable (no categories, just individual fields)
     """
-    # List of fields that are multi-select in Airtable and require array values
-    multi_select_fields = [
-        "Territory",
-        "General Rights Tags"
-    ]
+    # NOTE: All fields are sent as plain strings/text
+    # Multi-select logic removed to avoid LLM inconsistencies with determining valid options
 
     # List of fields to skip (e.g., checkbox fields that need special handling)
     skip_fields = [
         "Distribution Rights Acquired"
     ]
+
+    # Numeric fields that require type conversion
+    # Field 16: Minimum Delivery Commitment (integer)
+    # Field 18: Copyright Percentage Assigned (decimal 0-100)
+    numeric_fields = {
+        "Minimum Delivery Commitment": "integer",  # Field 16
+        "Copyright Percentage Assigned": "number"  # Field 18
+    }
 
     flattened = {}
 
@@ -90,6 +97,45 @@ def flatten_extracted_data(data_dict):
         
         return cleaned
 
+    def convert_numeric_value(field_name, value, field_type):
+        """
+        Convert a value to the appropriate numeric type for Airtable.
+        
+        Args:
+            field_name: Name of the field
+            value: The value to convert
+            field_type: Type of conversion ('integer' or 'number')
+            
+        Returns:
+            Converted numeric value or None if conversion fails/value is invalid
+        """
+        # Handle None, empty strings, and non-string/non-numeric values
+        if value is None or value == "":
+            return None
+        
+        # Check for explicit null values
+        if isinstance(value, str):
+            value_lower = value.lower().strip()
+            if value_lower in ("n/a", "not specified", "not applicable", "none", ""):
+                return None
+        
+        # Try to convert to number
+        try:
+            if field_type == "integer":
+                # Convert to integer
+                numeric_value = int(float(str(value).strip()))
+                return numeric_value
+            elif field_type == "number":
+                # Convert to float
+                numeric_value = float(str(value).strip())
+                return numeric_value
+        except (ValueError, TypeError, AttributeError):
+            # Conversion failed - return None to skip or use string fallback
+            print(f"  ⚠ Could not convert '{field_name}': '{value}' to {field_type}")
+            return None
+        
+        return None
+
     def process_field(field_name, field_data):
         """Helper function to process a single field."""
         # Skip fields that are in the skip list
@@ -99,32 +145,30 @@ def flatten_extracted_data(data_dict):
         if isinstance(field_data, dict) and "Extracted Value" in field_data:
             extracted_value = field_data["Extracted Value"]
             
-            # Clean the extracted value
+            # Clean the extracted value if it's a string
             if isinstance(extracted_value, str):
                 extracted_value = clean_value(extracted_value)
-
-            # Handle multi-select fields - convert to array if not already
-            if field_name in multi_select_fields:
-                if isinstance(extracted_value, str):
-                    if extracted_value and extracted_value != "N/A":
-                        # Split on newlines and strip whitespace from each tag
-                        items = [clean_value(v) for v in extracted_value.split("\n") if v.strip() and clean_value(v) != "N/A"]
-                        if items:
-                            flattened[field_name] = items
-                    # Skip empty or N/A values for multi-select
-                elif isinstance(extracted_value, list):
-                    # Already an array - clean each item
-                    flattened[field_name] = [clean_value(v) if isinstance(v, str) else v for v in extracted_value]
+            
+            # Apply type conversion for numeric fields
+            if field_name in numeric_fields:
+                field_type = numeric_fields[field_name]
+                converted_value = convert_numeric_value(field_name, extracted_value, field_type)
+                flattened[field_name] = converted_value
             else:
-                # Store the cleaned extracted value directly
+                # Store the cleaned extracted value directly as plain string/text
                 flattened[field_name] = extracted_value
         elif isinstance(field_data, dict):
             # Recursively process nested dictionaries (categories)
             for nested_field_name, nested_field_data in field_data.items():
                 process_field(nested_field_name, nested_field_data)
         else:
-            # Store primitive values as-is
-            flattened[field_name] = field_data
+            # Store primitive values as-is (or apply conversion if numeric field)
+            if field_name in numeric_fields:
+                field_type = numeric_fields[field_name]
+                converted_value = convert_numeric_value(field_name, field_data, field_type)
+                flattened[field_name] = converted_value
+            else:
+                flattened[field_name] = field_data
 
     # Process all top-level fields/categories
     for field_name, field_data in data_dict.items():

@@ -28,9 +28,7 @@ from utils import (
     extract_text_with_positions,
 )
 from post_processing import (
-    populate_template,
-    upload_to_airtable,
-    concord_template
+    upload_to_airtable
 )
 
 load_dotenv()
@@ -122,8 +120,7 @@ model = create_model(
     temperature=0.2,
 )
 
-# Load the Concord template
-concord_template = concord_template
+# Note: Concord template removed - data is now sent flat to Airtable without categorization
 
 
 # ============================================================================
@@ -425,12 +422,8 @@ def process_single_pdf(
         
         result["llm_time"] = time() - llm_start
 
-        # Post-processing
-        # response_data = update_extracted_value(json_data=response_data)
-        response_data = populate_template(
-            template=concord_template,
-            source=response_data
-        )
+        # Post-processing: Keep data flat (no categorization)
+        # Data from LLM is already in flat structure, ready for direct Airtable upload
 
         # Save output
         json_output_path = os.path.join(output_dir, f"{filename}.json")

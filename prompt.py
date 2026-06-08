@@ -36,317 +36,153 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     ### FIELDS TO EXTRACT
     Extract the following fields exactly as defined below. Use the exact field names provided, with no shortening or different wording. Only use the example to understand the output format, NOT to influence the output value.
 
-    --- SECTION 1: GENERAL ---
+    --- SECTION 1: CONTRACT-SPECIFIC FIELDS (GENERAL MUSIC CONTRACTS) ---
 
-    1. Catalog
-    - **Instruction**: The name of the artist, writer, producer, band, or other creative person(s) whose works are included in the rights acquired by PW. This is typically the primary subject of the APA — the person whose creative works are being bought and sold.
-    - **Format**: "[Catalog Name]"
-    - **Example**: "John C. Adams"
+    1. Agreement Name
+    - **Instruction**: The name of the agreement using the format below. Extract the rights holder party (the entity or person whose rights are being transferred), the rights recipient party (the entity acquiring the rights), the type of agreement, and the date of the agreement in DD Month YYYY format.
+    - **Format**: "[Rights Holder Party] <> [Rights Recipient Party] | [Agreement Type] | [Agreement Date in DD Month YYYY format]"
+    - **Example**: "Lee Merton Bunnell, Gerald Linford Beckley, Daniel Milton Peek <> Kinney Record Group Limited | Exclusive Recording Agreement | 17 May 1971"
 
-    2. General Rights Tags
-    - **Instruction**: High-level tags for the category(ies) of rights PW may have acquired. Select ALL that apply. Select PUBLISHING if PW is acquiring any interest in musical compositions, including copyrights, administration rights, publisher's share income, writer's share income, or any passive income rights relating to compositions. Select RECORDINGS if PW is acquiring any interest in sound recordings (masters), including copyrights, distribution rights, artist royalties, neighboring rights, or any passive income rights relating to recordings. Select ARTIST INDICIA if PW is acquiring or receiving any rights to use an artist's name, likeness, image, voice, or biographical information. Select BRANDING RIGHTS if PW is acquiring or receiving any branding, merchandising, or endorsement rights. Select ARTIST CONTENT RIGHTS if PW is acquiring or receiving any rights relating to life story, documentary, biopic, live stage, or similar content projects. Select TRADEMARKS if PW is acquiring any registered or unregistered trademarks. Select OTHER if PW is acquiring rights that do not fit into any of the above categories.
-    - **Format**: "A newline-separated list of applicable tags, each one of: PUBLISHING, RECORDINGS, ARTIST INDICIA, BRANDING RIGHTS, ARTIST CONTENT RIGHTS, TRADEMARKS, OTHER"
-    - **Example**: "PUBLISHING\\nRECORDINGS"
+    2. Agreement Type
+    - **Instruction**: Only choose one of the following options. The specific type of agreement governing the relationship between the rights holder and rights recipient. Select only one actual type, not the category.
+    - **Format**: "[Agreement Type]"
+    - **Options**: Publishing: "100% Copyright Assignment", "50% Copyright Assignment", "Co-Publishing Agreement", "Administration Agreement", "Sub-Publishing Agreement", "Songwriter Agreement", "PRO Affiliation Agreement", "MLC Membership Agreement", "Mechanical Licensing Agency Agreement". Recording: "Exclusive Recording Artist Agreement", "Producer Agreement", "Distribution Agreement", "Recording Assignment", "Settlement Agreement", "NRO Mandate", "Production Agreement". Licenses: "Synchronization License", "Master Use License", "Mechanical License", "Public Performance License", "Print License", "Lyric License". Transactional: "Asset Purchase Agreement", "Stock Purchase Agreement", "Copyright Assignment", "Catalog Acquisition Agreement". Other: "Management Agreement", "Talent Agency Agreement", "Merchandising License", "Sponsorship Agreement", "Split Sheet", "Band Agreement", "Side Letter", "Amendment", "Termination Agreement"
+    - **Example**: "Exclusive Recording Artist Agreement"
 
-    3. Acquisition Summary
-    - **Instruction**: A brief high-level summary of the acquisition using the format below. Fill in each subsection that applies based on the General Rights Tags. Omit any subsection that does not apply. Replace bracketed placeholders with actual deal terms. If PW acquired different percentages for different sub-rights within a category, reflect each percentage separately. If a subsection does not apply to the deal, omit it entirely. If the APA does not specify percentages for a sub-right, describe the right qualitatively.
-    - **Format**: "PW owns:\\n(a) Publishing: [X]% of Seller's rights in all musical compositions written by [NAME(S)] as of [DATE] and [X]% of copyrights, [X]% of administration rights, [X]% of contract rights, and [X]% of income related to those compositions.\\n(b) Recordings: [X]% of Seller's rights in all recordings featuring [NAME(S)] as of [DATE] and [X]% of copyrights, [X]% of distribution rights, [X]% of contract rights, and [X]% of income related to those recordings.\\n(c) Artist Indicia: [describe rights].\\n(d) Branding Rights: [describe rights].\\n(e) Artist Content Rights: [describe rights].\\n(f) Trademarks: [describe rights]."
-    - **Example**: "PW owns:\\n(a) Publishing: 75% of Seller's rights in all musical compositions written by John Adams as of 01 January 2020 and 75% of copyrights, 100% of administration rights, 75% of contract rights, and 75% of income related to those compositions."
-
-    4. Rights Status
-    - **Instruction**: A brief general description of whether PW or a third party own/control the works. Describe the ownership and control status of each major asset category. This should explain, at a practical level, what PW actually owns versus what third parties control.
-    - **Format**: "[Description of ownership and control status per asset category]"
-    - **Example**: "Compositions written before 01 January 1979 owned by WCM, passive income rights only. Compositions written on or after 01 January 1979, copyrights and administration rights owned by PW."
-
-    5. Additional Acquisition Summary Details
-    - **Instruction**: Any quirks with the deal that need to be highlighted up front and are not specifically captured in other fields. This includes collection/administration anomalies, copyright anomalies, multiple purchasers, unusual payment waterfalls, band entity structures, business management intermediaries, or any other atypical structural features. If none, return "None."
-    - **Format**: "[Description of quirks or anomalies, or 'None']"
-    - **Example**: "Royalty collections are handled by a legacy administrator outside the primary platform, and monthly statements are provided as manual CSV uploads. There may be delays of up to 30 days in revenue reporting and reconciliation."
-
-    6. Date of Acquisition Agreement
-    - **Instruction**: The date of the APA as stated in the preamble. Use the date format: DD Month YYYY (e.g., "01 January 2025"). If the APA is undated, use the last signature date. If no date can be determined, use null.
+    3. Agreement Date
+    - **Instruction**: Date of the particular governing agreement. Only return 1 date as there are no amendments for this demo.
     - **Format**: "DD Month YYYY"
-    - **Example**: "01 January 2025"
+    - **Example**: "01 March 1972"
 
-    7. Cash Date
-    - **Instruction**: The Cash Date specified in the APA — the date from which PW is entitled to collect income on the acquired assets. Use the standard date format: DD Month YYYY. If the Cash Date is not specified or is the same as the closing date, state "Same as closing date" or extract the specific date if provided.
-    - **Format**: "DD Month YYYY or 'Same as closing date'"
-    - **Example**: "01 January 2025"
+    4. Agreement Summary
+    - **Instruction**: A concise summary of the agreement in 3-4 sentences. Must include: type of agreement, date of agreement, and term of agreement.
+    - **Format**: "[Type of Agreement], [Date of Agreement], [Term of Agreement]. [Agreement Summary]"
+    - **Example**: "Co-Publishing and Administration Agreement covering all compositions written between January 1, 1990 and December 31, 1997."
 
-    8. PW Business Affairs Contact
-    - **Instruction**: The name of the internal PW business affairs person who supervised the acquisition, if identifiable from the APA or its notices section. Common contacts include Amy Ortner, Sam Rhulen, and Lexi Todd. If not identifiable from the document, return "Not specified in APA."
-    - **Format**: "[Name or 'Not specified in APA']"
-    - **Example**: "Amy Ortner"
+    5. Rights Holder Party
+    - **Instruction**: The party that gives out, transfers, or provides music copyright ownership or rights as denoted in the contract. This party is usually a songwriter, an artist or a licensor, but can also be a publisher or a label giving out rights to another publisher, label, distributor, etc.
+    - **Format**: "Comma-separated list of all rights holder parties with entity type if applicable"
+    - **Example**: "Lee Merton Bunnell, Gerald Linford Beckley, Daniel Milton Peek""
 
-    9. PW Outside Counsel
-    - **Instruction**: The name of the primary outside counsel firm and individual attorneys that worked on the transaction, if identifiable from the APA. Look in the notices section, signature blocks, and any references to counsel. If not identifiable, return "Not specified in APA."
-    - **Format**: "[Firm and/or attorney name(s), or 'Not specified in APA']"
-    - **Example**: "Smith & Jones LLP (Jane Smith)"
+    6. Rights Holder Party IPI
+    - **Instruction**: The CAE or IPI number of the Rights Holder party, if present.
+    - **Format**: "[IPI Number]" or "N/A"
+    - **Example**: "I-112549600-7"
 
-    10. Seller Parties (Individual)
-    - **Instruction**: Each Seller contracting party that is an individual (natural person). List each individual separately using newline characters. If there are no individual Seller parties, return "None."
-    - **Format**: "A newline-separated list of individual Seller party names, or 'None'"
-    - **Example**: "John Adams\\nJane Adams"
+    7. Rights Holder Party Address
+    - **Instruction**: Address of Rights Holder party, if present.
+    - **Format**: "[Address]"
+    - **Example**: "123 Music Boulevard, Nashville, Tennessee 37201, USA"
 
-    11. Seller Parties (Other)
-    - **Instruction**: Each Seller contracting party that is not an individual (i.e., entities such as LLCs, corporations, trusts, estates). List each entity separately with its full legal name and entity type as stated in the APA. Use newline characters to separate multiple entries. If there are no entity Seller parties, return "None."
-    - **Format**: "A newline-separated list of entity Seller parties with full legal name and entity type, or 'None'"
-    - **Example**: "Adams Music LLC (Delaware limited liability company)\\nAdams Publishing Trust"
+    8. Rights Recipient Party
+    - **Instruction**: The party that receives or gets assigned music copyright ownership or other rights as denoted in the contract. This party is usually a publisher, a label, a licensee, or a distributor, etc. 
+    - **Format**: "Comma-separated list of all rights recipient parties with entity type if applicable"
+    - **Example**: "Daniel Milton Peek"
 
-    12. Seller Counsel
-    - **Instruction**: The name of Seller's counsel, if identifiable from the APA. Look in the notices section, signature blocks, and any references to Seller's counsel or attorneys. If not identifiable, return "Not specified in APA."
-    - **Format**: "[Firm and/or attorney name(s), or 'Not specified in APA']"
-    - **Example**: "Davis & Moore LLP"
+    9. Rights Recipient Party IPI
+    - **Instruction**: The CAE or IPI number of the Rights Recipient party, if present.
+    - **Format**: "[IPI Number]"
+    - **Example**: "I-234567890-1"
 
-    13. Seller Personal Manager
-    - **Instruction**: The name of Seller's personal manager, if identifiable from the APA. Look in the notices section, approval provisions, and any references to personal management. If not identifiable, return "Not specified in APA."
-    - **Format**: "[Name, or 'Not specified in APA']"
-    - **Example**: "Not specified in APA"
+    10. Rights Recipient Party Address
+    - **Instruction**: Address of Rights Recipient party, if present.
+    - **Format**: "[Address]"
+    - **Example**: "456 Corporate Drive, Los Angeles, California 90001, USA"
 
-    14. Seller Business Manager
-    - **Instruction**: The name of Seller's business manager or business management firm, if identifiable from the APA. Look in the notices section, accounting provisions, and any references to business management. If not identifiable, return "Not specified in APA."
-    - **Format**: "[Name or firm, or 'Not specified in APA']"
-    - **Example**: "Not specified in APA"
+    11. Performing Rights Organization
+    - **Instruction**: The performing rights organization (PRO) of either the writer or the publisher party. There should only be at most one PRO in the contract, so only return at most one PRO for this field. Examples: BMI, ASCAP, SESAC, GMR, SOCAN, PRS, etc.
+    - **Format**: "[PRO Name]"
+    - **Example**: "BMI"
 
-    15. Purchaser
-    - **Instruction**: The PW contracting party(ies). Extract the full legal entity name(s) of the Purchaser as stated in the APA preamble or definitions. PW typically acquires through fund-specific entities (e.g., "Primary Wave Music IP Fund 4 US Sub LLC").
-    - **Format**: "[Full legal entity name(s) of Purchaser]"
-    - **Example**: "Primary Wave Music IP Fund 4 US Sub LLC"
+    12. Term Start
+    - **Instruction**: The start date of the agreement term. If the term does not have a clear start date, it is acceptable to use contract language to substitute for the date.
+    - **Format**: "DD Month YYYY or [contract language]"
+    - **Example**: "01 March 1972"
 
-    16. Holdbacks
-    - **Instruction**: Details of the Royalties Holdback and other holdbacks (if applicable), including holdback amount(s) at closing and holdback release terms. If there are multiple holdbacks, describe each one separately. If there are no holdbacks, return "None."
-    - **Format**: "[Description of each holdback including amount and release terms, or 'None']"
-    - **Example**: "None"
+    13. Term End
+    - **Instruction**: The end date of the agreement term. Try to calculate an exact end date if possible, if the start date and term duration are provided. Include any optional renewals/extensions when determining the end date. If the term does not have a clear end date, it is acceptable to use contract language to substitute for the date (e.g., "Perpetuity", "Until terminated by either party").
+    - **Format**: "DD Month YYYY or [contract language such as 'Perpetuity' or 'Until terminated by either party']"
+    - **Example**: "31 December 1978"
 
-    17. Right of First Negotiation / Matching Rights
-    - **Instruction**: Details of any first negotiation or matching rights from the APA between Seller and Purchaser. Include the specific trigger, the time period for each right, and the assets to which they apply. If none, return "None."
-    - **Format**: "[Description of right including trigger, time period, and assets, or 'None']"
-    - **Example**: "None"
+    14. Term Description
+    - **Instruction**: The specified duration of the agreement between parties. Capture the exact duration language, including any automatic renewals, extension options, or conditional term structures. Must understand exactly how long rights are controlled under the base agreement.
+    - **Format**: "[DD Month YYYY] through [DD Month YYYY]"
+    - **Example**: "01 January 2020 through 01 January 2025"
 
-    18. Additional Purchase Price
-    - **Instruction**: Details of any earnout(s), bonus payments, and other additional money payable to Seller that is triggered by an event from the APA. Include the trigger event, calculation methodology, payment timeline, and any caps or floors. If none, return "None."
-    - **Format**: "[Description of each additional payment including trigger, calculation, timeline, caps/floors, or 'None']"
-    - **Example**: "None"
+    15. Territory
+    - **Instruction**: The geographic scope where rights are granted under the agreement. Music contracts may be worldwide or limited to specific countries/regions. Note any territory exclusions or special terms for certain regions.
+    - **Format**: "[Worldwide/Specific Countries/Regions]"
+    - **Example**: "Worldwide" or "United States and Canada excluding Quebec"
 
-    19. Press Releases / Public Announcements
-    - **Instruction**: Details of any approval process or restrictions on press releases and public announcements from the APA. If the APA is silent, return "Silent."
-    - **Format**: "[Description of approval process or restrictions, or 'Silent']"
-    - **Example**: "Silent"
+    16. Minimum Delivery Commitment
+    - **Instruction**: The total number of songs that the writer or artist needs to deliver to the publisher or label during the contract term to satisfy the delivery commitment. Set to 0 if not present.
+    - **Format**: [Number]
+    - **Example**: 10
 
-    20. Restrictions on Seller
-    - **Instruction**: Details of any non-standard restrictions on the Seller from the APA. Do NOT summarize boilerplate restrictions from PW's standard form APA that appear in all acquisitions (such as no amendments to existing agreements, no advances, no insolvency, indemnification approvals) unless they differ from standard form language or were substantially negotiated. Specifically look for: (1) Re-Recording Restrictions — any restrictions on Seller's ability to create re-recordings of acquired recordings; (2) AI Restrictions — any restrictions on Seller's ability to authorize use of transferred assets for training artificial intelligence; (3) Non-Compete / Non-Solicitation — any restrictions on Seller's competitive activities; (4) Other Negotiated Restrictions — any other restrictions specifically negotiated for this deal. If there are no non-standard restrictions, return "Standard form restrictions only."
-    - **Format**: "[Description of non-standard restrictions, or 'Standard form restrictions only']"
-    - **Example**: "Standard form restrictions only"
+    17. Rights Granted
+    - **Instruction**: Rights given by the Artist/Songwriter Parties to the Publisher/Label Parties. The specific bundle of rights granted to the third-party (label, publisher, distributor, etc.) under the agreement. This should detail all exploitation rights transferred, including but not limited to: reproduction, distribution, public performance, synchronization, mechanical, digital, derivative works, merchandising, audio-visual, and any other enumerated rights. Include any limitations on these rights, exclusivity provisions, and reserved rights that remain with the original rights holder. If multiple rights are granted, list them separated by newlines or semicolons.
+    - **Format**: "[Comprehensive list of rights granted]"
+    - **Example**: "100% of all rights in the recordings (copyright and distribution rights included); Exclusive administration rights; Non-exclusive distribution license"
 
-    21. Additional Purchaser Obligations
-    - **Instruction**: Details of any additional obligations of the Purchaser from the APA beyond standard form, such as documentary financing, marketing commitments, key-person clauses. Do NOT summarize boilerplate obligations from PW's standard form APA. If none beyond standard form, return "Standard form obligations only."
-    - **Format**: "[Description of additional purchaser obligations, or 'Standard form obligations only']"
-    - **Example**: "Standard form obligations only"
+    18. Copyright Percentage Assigned
+    - **Instruction**: The percentage of music copyright ownership that the Rights Holder Party transfers to the Rights Recipient Party as part of this contract. Return 0 if the contract does not include a transfer of copyright ownership, such as for administration only contracts, subpublishing contracts, or contracts not involving copyright ownership.
+    - **Format**: [Number between 0 and 100, no % symbol]
+    - **Example**: 100
 
-    22. Additional Seller Obligations
-    - **Instruction**: Details of any additional obligations of the Seller from the APA beyond standard form, such as marketing commitments, copyright registrations, PRO registrations, consents, delivery of revised schedules. Do NOT summarize boilerplate obligations from PW's standard form APA. If none beyond standard form, return "Standard form obligations only."
-    - **Format**: "[Description of additional seller obligations, or 'Standard form obligations only']"
-    - **Example**: "Standard form obligations only"
+    19. Exclusivity
+    - **Instruction**: Whether the rights granted are exclusive, non-exclusive, or a mix. Capture all details about exclusivity during the term plus any tail/post-term provisions; use-specific exclusivity (e.g., exclusive for some uses, non-exclusive for others); territorial exclusivity variations; any carve-outs to exclusivity. Do not return a one-word "Exclusive" when nuance exists.
+    - **Format**: "[Details]"
+    - **Example**: "Exclusive for streaming platforms during the term; non-exclusive for radio broadcasts"
 
-    23. Governing Law of Acquisition Agreement
-    - **Instruction**: The governing law of the APA. Return ONLY the jurisdiction (e.g., "New York") and NOT the forum for disputes.
-    - **Format**: "[Jurisdiction]"
-    - **Example**: "New York"
+    20. Reserved Rights
+    - **Instruction**: Rights specifically reserved by the Rights Holder Party - rights not transferred or licensed under the contract. Common reservations include sync rights, derivative works rights, merchandising, or specific uses subject to approval. If multiple rights are reserved, list them separated by newlines or semicolons.
+    - **Format**: "[List of reserved rights]"
+    - **Example**: "Synchronization rights for motion pictures; Merchandising rights; Derivative works rights"
 
-    24. Jurisdiction and Venue for Acquisition Agreement Disputes
-    - **Instruction**: The jurisdiction and venue for disputes arising under the APA. Include both the court(s) and the geographic location.
-    - **Format**: "[Court(s) and geographic location]"
-    - **Example**: "State and federal courts located in New York County, NY"
+    21. Approval Rights
+    - **Instruction**: Specific uses of copyrighted material that require the original rights holder's explicit approval. Common examples include synchronization licenses, sampling, merchandise, and other high-value or reputation-impacting uses. If multiple approval rights apply, list them separated by newlines or semicolons.
+    - **Format**: "[List of uses requiring approval]"
+    - **Example**: "Commercial exploitation of demos; Use of Artist's name, likeness, and biographical data in connection with exploitation"
 
-    25. Indemnification
-    - **Instruction**: Summary of APA indemnification provisions, procedures, and limitations. Provide a structured summary covering: (1) Scope — who indemnifies whom and for what categories of losses; (2) Joint and Several — whether Seller parties are jointly and severally liable; (3) Claim Requirements — whether claims must be reduced to final judgment or can be settled; (4) Notice — notice requirements and whether failure to give notice is deemed a waiver; (5) Defense — who controls defense of third-party claims, counsel approval rights; (6) Settlement — whether indemnitee can settle without indemnitor consent; (7) Offset Rights — whether PW can offset indemnification claims against amounts due to Seller; (8) Caps and Baskets — any caps on liability, deductible baskets, or tipping baskets; (9) Survival — how long representations and warranties survive closing. Do not extract verbatim text for this field.
-    - **Format**: "[Structured summary covering each of the 9 categories above]"
-    - **Example**: "1. Scope: Seller indemnifies PW for breaches of representations and excluded liabilities. PW indemnifies Seller for PW's post-closing exploitation of assets.\\n2. Joint and Several: Yes.\\n..."
+    22. Reversion Rights
+    - **Instruction**: Specific provisions describing when and how rights return to the original owner, often a songwriter or recording artist, but can also be a rightsholder who granted rights to an administrator or subpublisher. Include all contractual reversions and whether they occur automatically or require formal notices. Include triggers.
+    - **Format**: "[conditions when rights revert]"
+    - **Example**: "Rights will automatically revert to the Artist upon expiration of the term unless the Publisher provides written notice of intent to renew at least 90 days prior to term end."
 
-    26. Additional Notes
-    - **Instruction**: Any additional general notes not covered elsewhere — items a PW business affairs or legal team member should be aware of that do not fit neatly into other fields. If none, return "None."
-    - **Format**: "[Additional notes, or 'None']"
-    - **Example**: "None"
+    23. Assignability
+    - **Instruction**: Provisions governing whether and how the agreement can be transferred to another party. May be freely assignable, require prior written consent, or contain specific assignment restrictions or requirements.
+    - **Format**: "[Details]"
+    - **Example**: "Either party may assign this Agreement without the other party's consent to any affiliate or in connection with a merger, acquisition, or sale of all or substantially all of its assets."
 
-    --- SECTION 2: ASSET DETAILS ---
+    24. Advances
+    - **Instruction**: Details about any advance payments made by the Rights Recipient Party to the Rights Holder Party, including amounts, payment schedule, and recoupment provisions.
+    - **Format**: "[Details]"
+    - **Example**: "$50,000 advance payable upon signing; recoupable from the first royalties earned"
 
-    27. PW Acquired Interest (%)
-    - **Instruction**: The high-level percentage of Seller's interest that PW acquired, expressed as a decimal (e.g., 0.75 for 75%). If PW bought different percentages for different asset categories, use the primary/overall acquisition percentage.
-    - **Format**: [Decimal number, e.g. 0.75]
-    - **Example**: 0.75
+    25. Royalty Rates
+    - **Instruction**: The presently applicable royalty rates organized by exploitation type (e.g., streaming, physical sales, sync, performance). Only include current rates in effect, not historical rates that no longer apply. Where rates are tied to specific conditions or thresholds, note those dependencies. Always use % instead of the word "percentage". If multiple rates apply, list them separated by newlines or semicolons.
+    - **Format**: "[Comprehensive list of all applicable royalty rates]"
+    - **Example**: "Records sold in the U.S. and Canada: 13%; Records sold in the UK, Australia and Germany: 9%; Streaming: 8% per stream"
 
-    28. Seller Retained Interest (%)
-    - **Instruction**: The high-level percentage of Seller's interest that Seller retained, expressed as a decimal (e.g., 0.25 for 25%). This should be the complement of PW Acquired Interest (%).
-    - **Format**: [Decimal number, e.g. 0.25]
-    - **Example**: 0.25
+    26. Accounting Frequency
+    - **Instruction**: How often royalty statements and payments must be issued to rights holders. Usually "Annually", "Quarterly", "Semi-annually", etc. Include any special accounting provisions for specific income types.
+    - **Format**: "[Accounting frequency with any special provisions]"
+    - **Example**: "Semi-annually; streaming income reported quarterly"
 
-    29. Rights Acquired (By Type)
-    - **Instruction**: The specific types of assets PW purchased, organized by asset category. For Publishing, select all that apply from: Publishing Copyrights, Publishing Administration Rights, Publisher's Share Income, Writer's Share Non-Performance Income, Writer's Share Performance Income. For Recordings, select all that apply from: Recording Copyrights, Recording Distribution Rights, Copyright Owner Income, Artist Royalties, Neighboring Rights Income (Featured Artist Share), Neighboring Rights Income (Copyright Owner Share), Producer Royalties. For Artist Indicia, describe whether PW acquired an interest in artist indicia or only non-exclusive rights to use artist indicia, including any limitations. For Branding Rights, indicate whether Exclusive or Non-Exclusive and list commission details if applicable. For Artist Content Rights, describe scope and list commission details if applicable. For Trademarks, indicate whether Registered, Unregistered, or both. For Other, describe scope.
-    - **Format**: "[Structured description of all rights acquired by category, using newlines to separate categories and items]"
-    - **Example**: "Publishing:\\n- Publishing Copyrights\\n- Publishing Administration Rights\\n- Publisher's Share Income\\n\\nRecordings:\\n- Recording Copyrights\\n- Artist Royalties"
+    27. Accounting Lag
+    - **Instruction**: The contractually permitted delay between the end of a statement period and when payment must be issued. Typically 45-90 days depending on accounting frequency. For example, the statement must be issued on the first day of May, and payments must be issued within 30 days of the statement.
+    - **Format**: "[Number] [Days/Months]"
+    - **Example**: "60 days from end of accounting period"
 
-    30. Excluded Assets and/or Excluded Rights
-    - **Instruction**: Description of specifically excluded assets and/or rights — i.e., rights that PW did not buy. Include any temporal, geographic, or categorical exclusions. If none are specified, return "None specified."
-    - **Format**: "[Description of excluded assets and rights, or 'None specified']"
-    - **Example**: "None specified"
+    28. Audit Rights
+    - **Instruction**: Provisions allowing the Artist party to examine accounting records to verify proper royalty payments. Include audit frequency, scope limitations, frequency restrictions, lookback periods, and any special procedures or penalties.
+    - **Format**: "[details of audit rights]"
+    - **Example**: "Licensee's books may be audited once per calendar year, no more than once per accounting period, by an independent certified public accountant; audit must be initiated within three years after statement date; auditor bound by confidentiality agreement."
 
-    31. Income Sources
-    - **Instruction**: List of income sources by publishing, recordings, and other. These are the third-party payors (e.g., labels, publishers, PROs, distributors) from which PW will collect income on the acquired assets. List each source separately using newline characters.
-    - **Format**: "A newline-separated list of income sources"
-    - **Example**: "Universal Music Group (recording royalties)\\nASCAP (performance royalties)\\nSony Music Publishing (mechanical royalties)"
-
-    32. Current PRO
-    - **Instruction**: The PRO the writer is currently affiliated with, as well as any other PROs currently licensing any compositions. Examples: ASCAP, BMI, SESAC, GMR, PRS, GEMA, SACEM. If not specified, return "Not specified."
-    - **Format**: "[PRO name(s), or 'Not specified']"
-    - **Example**: "ASCAP"
-
-    33. Current NRO
-    - **Instruction**: The neighboring rights organization(s) currently collecting for the sound recordings. Examples: SoundExchange, PPL, SENA, GVL. If not specified, return "Not specified."
-    - **Format**: "[NRO name(s), or 'Not specified']"
-    - **Example**: "SoundExchange"
-
-    34. Current Trademark Portfolio
-    - **Instruction**: Note whether the APA includes or references a schedule of trademarks with registration information. If so, state "See schedule of trademarks [reference the specific exhibit or schedule]." If no trademark schedule, return "No trademark schedule."
-    - **Format**: "'See schedule of trademarks [exhibit/schedule reference]' or 'No trademark schedule'"
-    - **Example**: "No trademark schedule"
-
-    --- SECTION 3: POST-CLOSING ASSET MANAGEMENT ---
-
-    35. Go-Forward Arrangements
-    - **Instruction**: Any go-forward arrangements arising from the APA. For example, go-forward administration or distribution agreements, management agreements, or service agreements between PW and Seller or third parties. If none, return "N/A."
-    - **Format**: "[Description of go-forward arrangements, or 'N/A']"
-    - **Example**: "N/A"
-
-    36. Possible Additional Rights
-    - **Instruction**: Any purchase options, swap agreements, or similar provisions allowing PW to acquire additional rights in the future (separate from first negotiation or matching rights). If none, return "N/A."
-    - **Format**: "[Description of possible additional rights, or 'N/A']"
-    - **Example**: "N/A"
-
-    37. Exclusivity Restrictions
-    - **Instruction**: Any exclusivity restrictions Seller or Purchaser agreed to post-closing. For example, exclusive licenses, exclusive distribution arrangements, or territorial exclusivity granted to third parties that PW must honor. Include the identity of the third party, the scope of exclusivity, the territory, and the term. If none, return "None."
-    - **Format**: "[Description of exclusivity restrictions including third party, scope, territory, and term, or 'None']"
-    - **Example**: "None"
-
-    38. Other (Post-Closing)
-    - **Instruction**: Any other post-closing asset management provisions. For example, archival budgets, processes for storing physical assets, digitization obligations, joint exploitation committees, or creative consultation rights. If none, return "None."
-    - **Format**: "[Description of other post-closing provisions, or 'None']"
-    - **Example**: "None"
-
-    39. PW Rights of Distribution Start Date
-    - **Instruction**: Only populate if the APA indicates that PW has acquired rights of distribution for sound recordings and PW will be taking over distribution after closing. The first date on which PW will have the contractual right to take over rights of distribution. Use the standard date format: DD Month YYYY. If PW did not acquire distribution rights, return "N/A."
-    - **Format**: "DD Month YYYY or 'N/A'"
-    - **Example**: "N/A"
-
-    40. Acquired Rights of Distribution Territory
-    - **Instruction**: Only populate if PW acquired distribution rights. The territory in which PW has acquired distribution rights. If worldwide, state "Worldwide." If subject to territorial exclusions, state "Worldwide excluding [territories]." If PW did not acquire distribution rights, return "N/A."
-    - **Format**: "'Worldwide', 'Worldwide excluding [territories]', or 'N/A'"
-    - **Example**: "N/A"
-
-    41. Current Distributor
-    - **Instruction**: Only populate if PW acquired distribution rights. The current distributor of the sound recordings, if identified in the APA. If PW did not acquire distribution rights, return "N/A."
-    - **Format**: "[Distributor name, or 'N/A']"
-    - **Example**: "N/A"
-
-    42. Current Distributor Governing Agreement
-    - **Instruction**: Only populate if PW acquired distribution rights. The name of the relevant governing agreement that governs the current distributor's distribution rights. Use the format: "[Party A] f/s/o [Party B] <> [Distributor] - [Agreement Type] - [Date]" if identifiable. If PW did not acquire distribution rights, return "N/A."
-    - **Format**: "[Agreement name in specified format, or 'N/A']"
-    - **Example**: "N/A"
-
-    43. Termination Notice Required
-    - **Instruction**: Only populate if PW acquired distribution rights. Whether termination notice is required to terminate the current distribution agreement and, if so, the notice period and deadline. If PW did not acquire distribution rights, return "N/A."
-    - **Format**: "[Yes/No and notice period/deadline, or 'N/A']"
-    - **Example**: "N/A"
-
-    44. Videos Included
-    - **Instruction**: Only populate if PW acquired distribution rights. Whether the distribution rights include audio-visual recordings (music videos). Select "Yes" or "No." If only audio-only recordings, select "No." If PW did not acquire distribution rights, return "N/A."
-    - **Format**: "'Yes', 'No', or 'N/A'"
-    - **Example**: "N/A"
-
-    45. Other PW Distribution Obligations
-    - **Instruction**: Only populate if PW acquired distribution rights. Any other contractual obligations under the APA relating to PW's exercise of rights of distribution. For example, commercial exploitation deadlines, minimum release commitments, or marketing spend requirements. If PW did not acquire distribution rights, return "N/A." If PW acquired distribution rights but there are no other obligations, return "None."
-    - **Format**: "[Description of other distribution obligations, 'None', or 'N/A']"
-    - **Example**: "N/A"
-
-    --- SECTION 4: APPROVAL DETAILS ---
-
-    46. PW Obligation to Obtain Seller Approval (Outgoing)
-    - **Instruction**: List of Seller's approval rights from the APA — i.e., instances when PW must obtain Seller's approval before taking action. List each approval category separately using newline characters. Do NOT list standard boilerplate approvals that appear in every PW form APA unless they were substantively negotiated. Common approval categories include: Branding licenses; Synchronization licensing for specified categories (e.g., motion pictures, audio-visual use, X-rated films, NC-17 rated content, pornographic material, political uses, religious uses, alcohol, tobacco, firearms, personal hygiene products, drugs, fur products); Lyric reprints; Use of lyrics as a title of a work; Foreign language translations; Samples / interpolations; Grand rights uses; Purchaser-secured branding agreements. If none, return "None."
-    - **Format**: "A newline-separated list of approval categories, or 'None'"
-    - **Example**: "Synchronization licensing for pornographic material\\nGrand rights uses\\nSamples / interpolations"
-
-    47. Approval Procedure
-    - **Instruction**: The timeline for responses, what happens if no response is given, and the procedure when multiple approval parties are involved. Specifically extract: (1) Standard of approval (e.g., "not to be unreasonably withheld or delayed"); (2) Deemed approval provisions (e.g., "deemed approved if not rejected within 3 business days"); (3) Multiple approval party procedures. If silent, return "Silent."
-    - **Format**: "[Description of approval procedure covering standard of approval, deemed approval, and multiple party procedures, or 'Silent']"
-    - **Example**: "Silent"
-
-    48. Seller Approval Contact
-    - **Instruction**: Name and contact information for each approval contact. Include email addresses and any cc requirements. If not specified, return "Not specified."
-    - **Format**: "[Name and contact information for each approval contact, or 'Not specified']"
-    - **Example**: "Not specified"
-
-    --- SECTION 5: ACCOUNTING & AUDIT ---
-
-    49. Accounting Frequency to Seller
-    - **Instruction**: How often PW must account to Seller for Seller Retained Interest. Select ONLY one: Monthly, Quarterly, Semi-Annually, Annually, Other, Silent. If the APA specifies a different frequency for different asset categories, select "Other" and explain.
-    - **Format**: "[Monthly / Quarterly / Semi-Annually / Annually / Other / Silent]"
-    - **Example**: "Semi-Annually"
-
-    50. Accounting Lag to Seller
-    - **Instruction**: How many days after the end of the applicable accounting period PW must account to Seller. Extract the specific number of days (e.g., "90 days," "60 days," "120 days"). If the APA specifies a different calculation (e.g., "45 days after receipt by Purchaser of the applicable third-party statement"), extract that specific language.
-    - **Format**: "[Number] days or [specific language]"
-    - **Example**: "90 days"
-
-    51. Seller Statement Recipient(s)
-    - **Instruction**: Name and contact information for each person that receives royalty statements from PW to Seller. Include email addresses and mailing addresses if specified.
-    - **Format**: "[Name and contact information for each statement recipient]"
-    - **Example**: "Not specified"
-
-    52. Other Royalty Participants (Companies)
-    - **Instruction**: Payments to third-party company payees required under the APA. For each, extract: the identity of the payee, the financial terms (percentage, receipts pool, deductions), accounting frequency, statement recipients, and all other relevant terms. If none, return "None."
-    - **Format**: "[Description of each company royalty participant with all relevant terms, or 'None']"
-    - **Example**: "None"
-
-    53. Other Royalty Participants (Individuals)
-    - **Instruction**: Payments to third-party individual payees required under the APA. For each, extract: the identity of the payee, the financial terms (percentage, receipts pool, deductions), accounting frequency, statement recipients, and all other relevant terms. If none, return "None."
-    - **Format**: "[Description of each individual royalty participant with all relevant terms, or 'None']"
-    - **Example**: "None"
-
-    54. Seller Rights to Audit PW
-    - **Instruction**: Details on Seller's rights to audit the books of PW. Provide a structured summary covering: (1) Auditor qualifications — who can conduct the audit; (2) Audit scope and frequency — duration, notice requirements, business hours, whether audits must be at PW's office; (3) Objection period — how long Seller has to audit or object to a statement; (4) Deadline to sue — time limit for Seller to bring a legal claim based on a statement; (5) Audit frequency limitation — how often statements may be audited; (6) Cost shifting — whether PW must pay for the audit if an underpayment exceeding a threshold is found.
-    - **Format**: "[Structured summary of audit rights covering each of the 6 categories above]"
-    - **Example**: "1. Auditor Qualifications: CPA experienced in music industry audits.\\n2. Audit Scope: Once per year, upon 30 days' notice, during PW's normal business hours.\\n..."
-
-    55. Pre-Closing Audits by Seller
-    - **Instruction**: List of any pre-closing audits conducted by Seller referenced in the APA. Include the auditee, the audit period, and the settlement date/status if known. If none referenced, return "None referenced."
-    - **Format**: "[Description of each pre-closing audit, or 'None referenced']"
-    - **Example**: "None referenced"
-
-    --- SECTION 6: SELLER RETAINED INTEREST FINANCIAL TERMS ---
-
-    56. Percentage of Revenue Received by PW
-    - **Instruction**: The percentage of income PW collects. Clarify whether PW collects both PW's share and the Seller Retained Interest (i.e., PW collects 100% and then accounts to Seller for Seller's share), or only PW's share. Express as a decimal (e.g., 1.0 if PW collects 100%, 0.75 if PW collects only its share).
-    - **Format**: [Decimal number, e.g. 1.0]
-    - **Example**: 1.0
-
-    57. Seller Retained Interest Percentage
-    - **Instruction**: The percentage of income that was retained by the Seller when PW acquires less than 100%. Express as a decimal (e.g., 0.25 for 25%).
-    - **Format**: [Decimal number, e.g. 0.25]
-    - **Example**: 0.25
-
-    58. Other Payable Percentages
-    - **Instruction**: Any other amounts payable to Seller by PW under the APA that are separate from the standard Seller Retained Interest accounting. For example: commissions on Purchaser-secured branding licenses, shares of pre-Cash Date audit recoveries, or other special payments. For each, include the percentage, the receipts pool, and any conditions. If none, return "None."
-    - **Format**: "[Description of each other payable percentage, or 'None']"
-    - **Example**: "None"
-
-    59. PW Administration Fee
-    - **Instruction**: The administration fee PW is entitled to charge Seller as a percentage, per the APA. This typically applies if PW self-administers the compositions. Include the percentage and the base against which it is calculated. If none, return "None."
-    - **Format**: "[Percentage and base, or 'None']"
-    - **Example**: "15% of gross revenues if PW self-administers Compositions"
-
-    60. PW Distribution Fee
-    - **Instruction**: The distribution fee PW is entitled to charge Seller as a percentage, per the APA. This typically applies if PW self-distributes the recordings. Include the percentage and the base against which it is calculated. If none, return "None."
-    - **Format**: "[Percentage and base, or 'None']"
-    - **Example**: "25% of gross revenues if PW self-distributes Recordings"
+    29. Governing Law and Jurisdiction
+    - **Instruction**: Combine both the governing law of the agreement and the jurisdiction/venue for disputes. The specific state or country law that governs interpretation and enforcement, and the specified courts or arbitration forums where disputes must be resolved. Include any mandatory mediation provisions, exclusive jurisdiction clauses, or forum selection requirements.
+    - **Format**: "[Governing Law: State/Country]; [Jurisdiction and Venue: Court/Arbitration Forum]"
+    - **Example**: "Governing Law: California law; Jurisdiction: Exclusive jurisdiction in the state and federal courts located in Los Angeles County, California. Arbitration: JAMS arbitration in Los Angeles if mediation fails."
 -------------------------
     ### EXTRACTION RULES
     - Output format (strict):
