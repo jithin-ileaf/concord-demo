@@ -67,7 +67,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     6. Rights Holder Party IPI
     - **Instruction**: The CAE or IPI number of the Rights Holder party, if present.
     - **Format**: "[IPI Number]" or "Not Specified"
-    - **Example**: "I-112549600-7"
+    - **Example**: "I-112549600-8"
 
     7. Rights Holder Party Address
     - **Instruction**: Address of Rights Holder party, if present.
