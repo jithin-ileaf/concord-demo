@@ -26,7 +26,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
        - If Extracted Value is "N/A", omit the Position object entirely for that field. The output schema example should reflect this
     7. Output Requirements:
        - Return a SINGLE valid JSON object
-       - Extract values must be EXACT as per instructions,format and examples below
+       - Extract values must be EXACT as per instructions, format and examples below
        - Do not return empty strings; use "N/A" where applicable
        - Include ALL fields listed below
        - No additional text, no markdown code blocks, no commentary
@@ -35,8 +35,6 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     -------------------------
     ### FIELDS TO EXTRACT
     Extract the following fields exactly as defined below. Use the exact field names provided, with no shortening or different wording. Only use the example to understand the output format, NOT to influence the output value.
-
-    --- SECTION 1: CONTRACT-SPECIFIC FIELDS (GENERAL MUSIC CONTRACTS) ---
 
     1. Agreement Name
     - **Instruction**: The name of the agreement using the format below. Extract the rights holder party (the entity or person whose rights are being transferred), the rights recipient party (the entity acquiring the rights), the type of agreement, and the date of the agreement in DD Month YYYY format.
@@ -50,23 +48,23 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "Exclusive Recording Artist Agreement"
 
     3. Agreement Date
-    - **Instruction**: Date of the particular governing agreement. Only return 1 date as there are no amendments for this demo.
+    - **Instruction**: Date of the agreement.
     - **Format**: "DD Month YYYY"
     - **Example**: "01 March 1972"
 
     4. Agreement Summary
-    - **Instruction**: A concise summary of the agreement in 3-4 sentences. Must include: type of agreement, date of agreement, and term of agreement.
-    - **Format**: "[Type of Agreement], [Date of Agreement], [Term of Agreement]. [Agreement Summary]"
+    - **Instruction**: A concise summary of the agreement in 2-3 sentences, at most 150 characters. Must include: type of agreement, date of agreement, and term of agreement.
+    - **Format**: "[Agreement Summary]"
     - **Example**: "Co-Publishing and Administration Agreement covering all compositions written between January 1, 1990 and December 31, 1997."
 
     5. Rights Holder Party
     - **Instruction**: The party that gives out, transfers, or provides music copyright ownership or rights as denoted in the contract. This party is usually a songwriter, an artist or a licensor, but can also be a publisher or a label giving out rights to another publisher, label, distributor, etc.
-    - **Format**: "Comma-separated list of all rights holder parties with entity type if applicable"
-    - **Example**: "Lee Merton Bunnell, Gerald Linford Beckley, Daniel Milton Peek""
+    - **Format**: "Comma-separated list of all rights holder parties"
+    - **Example**: "Lee Merton Bunnell, Gerald Linford Beckley, Daniel Milton Peek"
 
     6. Rights Holder Party IPI
     - **Instruction**: The CAE or IPI number of the Rights Holder party, if present.
-    - **Format**: "[IPI Number]" or "Not Specified"
+    - **Format**: "[IPI Number]"
     - **Example**: "I-112549600-8"
 
     7. Rights Holder Party Address
@@ -76,7 +74,7 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
 
     8. Rights Recipient Party
     - **Instruction**: The party that receives or gets assigned music copyright ownership or other rights as denoted in the contract. This party is usually a publisher, a label, a licensee, or a distributor, etc. 
-    - **Format**: "Comma-separated list of all rights recipient parties with entity type if applicable"
+    - **Format**: "Comma-separated list of all rights recipient parties"
     - **Example**: "Daniel Milton Peek"
 
     9. Rights Recipient Party IPI
@@ -101,12 +99,12 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
 
     13. Term End
     - **Instruction**: The end date of the agreement term. Try to calculate an exact end date if possible, if the start date and term duration are provided. Include any optional renewals/extensions when determining the end date. If the term does not have a clear end date, it is acceptable to use contract language to substitute for the date (e.g., "Perpetuity", "Until terminated by either party").
-    - **Format**: "DD Month YYYY or [contract language such as 'Perpetuity' or 'Until terminated by either party']"
+    - **Format**: "DD Month YYYY or [contract language]"
     - **Example**: "31 December 1978"
 
     14. Term Description
-    - **Instruction**: The specified duration of the agreement between parties. Capture the exact duration language, including any automatic renewals, extension options, or conditional term structures. Must understand exactly how long rights are controlled under the base agreement.
-    - **Format**: "[DD Month YYYY] through [DD Month YYYY]"
+    - **Instruction**: The specified term of the agreement between parties. Capture the exact term definition, along with any renewals, extension options, or conditional term structures.
+    - **Format**: "[DD Month YYYY] through [DD Month YYYY]", or "[contract language]"
     - **Example**: "01 January 2020 through 01 January 2025"
 
     15. Territory
@@ -120,9 +118,9 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: 10
 
     17. Rights Granted
-    - **Instruction**: Rights given by the Artist/Songwriter Parties to the Publisher/Label Parties. The specific bundle of rights granted to the third-party (label, publisher, distributor, etc.) under the agreement. This should detail all exploitation rights transferred, including but not limited to: reproduction, distribution, public performance, synchronization, mechanical, digital, derivative works, merchandising, audio-visual, and any other enumerated rights. Include any limitations on these rights, exclusivity provisions, and reserved rights that remain with the original rights holder. If multiple rights are granted, list them separated by newlines or semicolons.
-    - **Format**: "[Comprehensive list of rights granted]"
-    - **Example**: "100% of all rights in the recordings (copyright and distribution rights included); Exclusive administration rights; Non-exclusive distribution license"
+    - **Instruction**: List of all rights given by the Rights Holder Party to the Rights Recipient Party as part of this contract. This should detail all exploitation rights transferred, including but not limited to: reproduction, distribution, public performance, synchronization, mechanical, digital, derivative works, merchandising, audio-visual, and any other enumerated rights. Include any limitations on these rights, exclusivity provisions, and reserved rights that remain with the original rights holder. If multiple rights are granted, list them separated by newlines. Each line of right must begin with a capital letter.
+    - **Format**: "[List of rights granted, separated by newlines]", for example: "[Right 1]\\n[Right 2]\\n..."
+    - **Example**: "100% of all rights in the recordings (copyright and distribution rights included).\\nExclusive administration rights.\\nNon-exclusive distribution license.\\n..."
 
     18. Copyright Percentage Assigned
     - **Instruction**: The percentage of music copyright ownership that the Rights Holder Party transfers to the Rights Recipient Party as part of this contract. Return 0 if the contract does not include a transfer of copyright ownership, such as for administration only contracts, subpublishing contracts, or contracts not involving copyright ownership.
@@ -130,19 +128,19 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: 100
 
     19. Exclusivity
-    - **Instruction**: Whether the rights granted are exclusive, non-exclusive, or a mix. Capture all details about exclusivity during the term plus any tail/post-term provisions; use-specific exclusivity (e.g., exclusive for some uses, non-exclusive for others); territorial exclusivity variations; any carve-outs to exclusivity. Do not return a one-word "Exclusive" when nuance exists.
+    - **Instruction**: Whether the rights granted are exclusive, non-exclusive, or a mix. Capture all details about exclusivity during the term plus any tail/post-term provisions; use-specific exclusivity (e.g., exclusive for some uses, non-exclusive for others); territorial exclusivity variations; any carve-outs to exclusivity. Do not return a one-word "Exclusive" when nuance exists. If there are multiple rights to explain, return a newline-separated list, with each line beginning with a capital letter.
     - **Format**: "[Details]"
-    - **Example**: "Exclusive for streaming platforms during the term; non-exclusive for radio broadcasts"
+    - **Example**: "Exclusive for streaming platforms during the term.\\nNon-exclusive for radio broadcasts."
 
     20. Reserved Rights
-    - **Instruction**: Rights specifically reserved by the Rights Holder Party - rights not transferred or licensed under the contract. Common reservations include sync rights, derivative works rights, merchandising, or specific uses subject to approval. If multiple rights are reserved, list them separated by newlines or semicolons.
-    - **Format**: "[List of reserved rights]"
-    - **Example**: "Synchronization rights for motion pictures; Merchandising rights; Derivative works rights"
+    - **Instruction**: Rights specifically reserved by the Rights Holder Party - rights not transferred or licensed under the contract. Common reservations include sync rights, derivative works rights, merchandising, or specific uses subject to approval. If multiple rights are reserved, list them separated by newlines. Each line of right must begin with a capital letter.
+    - **Format**: "[List of reserved rights, separated by newlines]", for example: "[Right 1]\\n[Right 2]\\n..."
+    - **Example**: "Synchronization rights for motion pictures\\nMerchandising rights\\nDerivative works rights"
 
     21. Approval Rights
-    - **Instruction**: Specific uses of copyrighted material that require the original rights holder's explicit approval. Common examples include synchronization licenses, sampling, merchandise, and other high-value or reputation-impacting uses. If multiple approval rights apply, list them separated by newlines or semicolons.
-    - **Format**: "[List of uses requiring approval]"
-    - **Example**: "Commercial exploitation of demos; Use of Artist's name, likeness, and biographical data in connection with exploitation"
+    - **Instruction**: Specific uses of copyrighted material that require the original rights holder's explicit approval. Common examples include synchronization licenses, sampling, merchandise, and other high-value or reputation-impacting uses. If multiple approval rights apply, list them separated by newlines. Each line of right must begin with a capital letter.
+    - **Format**: "[List of uses requiring approval, separated by newlines]", for example: "[Right 1]\\n[Right 2]\\n..."
+    - **Example**: "Commercial exploitation of demos\\nUse of Artist's name, likeness, and biographical data in connection with exploitation"
 
     22. Reversion Rights
     - **Instruction**: Specific provisions describing when and how rights return to the original owner, often a songwriter or recording artist, but can also be a rightsholder who granted rights to an administrator or subpublisher. Include all contractual reversions and whether they occur automatically or require formal notices. Include triggers.
@@ -160,30 +158,31 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     - **Example**: "$50,000 advance payable upon signing; recoupable from the first royalties earned"
 
     25. Royalty Rates
-    - **Instruction**: The presently applicable royalty rates organized by exploitation type (e.g., streaming, physical sales, sync, performance). Only include current rates in effect, not historical rates that no longer apply. Where rates are tied to specific conditions or thresholds, note those dependencies. Always use % instead of the word "percentage". If multiple rates apply, list them separated by newlines or semicolons.
-    - **Format**: "[Comprehensive list of all applicable royalty rates]"
-    - **Example**: "Records sold in the U.S. and Canada: 13%; Records sold in the UK, Australia and Germany: 9%; Streaming: 8% per stream"
+    - **Instruction**: List of all royalty rates by type. Use concise language when describing the type and rates, unless detailed language is required to describe the type of royalty. Where rates are tied to specific conditions or thresholds, note those dependencies. Always use "%" instead of the word "percentage". If there are multiple types of royalty rates, list them separated by newlines.
+    - **Format**: "[List of all royalty rates by type, separated by newlines]"
+    - **Example**: "Records sold in the U.S. and Canada: 13%\\nRecords sold in the UK, Australia and Germany: 9%\\nStreaming: 8% per stream"
 
     26. Accounting Frequency
-    - **Instruction**: How often royalty statements and payments must be issued to rights holders. Usually "Annually", "Quarterly", "Semi-annually", etc. Include any special accounting provisions for specific income types.
-    - **Format**: "[Accounting frequency with any special provisions]"
-    - **Example**: "Semi-annually; streaming income reported quarterly"
+    - **Instruction**: How often royalty statements and payments must be issued to rights holders. Usually "Annually", "Quarterly", "Semi-annually", etc.
+    - **Format**: "[Accounting frequency]"
+    - **Example**: "Semi-annually"
 
     27. Accounting Lag
-    - **Instruction**: The contractually permitted delay between the end of a statement period and when payment must be issued. Typically 45-90 days depending on accounting frequency. For example, the statement must be issued on the first day of May, and payments must be issued within 30 days of the statement.
-    - **Format**: "[Number] [Days/Months]"
-    - **Example**: "60 days from end of accounting period"
+    - **Instruction**: The contractually permitted delay between the end of a statement period and when payment must be issued. Express this in number of days.
+    - **Format**: "[Number] days"
+    - **Example**: "60 days"
 
     28. Audit Rights
     - **Instruction**: Provisions allowing the Artist party to examine accounting records to verify proper royalty payments. Include audit frequency, scope limitations, frequency restrictions, lookback periods, and any special procedures or penalties.
     - **Format**: "[details of audit rights]"
-    - **Example**: "Licensee's books may be audited once per calendar year, no more than once per accounting period, by an independent certified public accountant; audit must be initiated within three years after statement date; auditor bound by confidentiality agreement."
+    - **Example**: "Licensee's books may be audited once per calendar year, no more than once per accounting period, by an independent certified public accountant. Audit must be initiated within three years after statement date. Auditor bound by confidentiality agreement."
 
     29. Governing Law and Jurisdiction
-    - **Instruction**: Combine both the governing law of the agreement and the jurisdiction/venue for disputes. The specific state or country law that governs interpretation and enforcement, and the specified courts or arbitration forums where disputes must be resolved. Include any mandatory mediation provisions, exclusive jurisdiction clauses, or forum selection requirements.
-    - **Format**: "[Governing Law: State/Country]; [Jurisdiction and Venue: Court/Arbitration Forum]"
-    - **Example**: "Governing Law: California law; Jurisdiction: Exclusive jurisdiction in the state and federal courts located in Los Angeles County, California. Arbitration: JAMS arbitration in Los Angeles if mediation fails."
--------------------------
+    - **Instruction**: Details about the state and/or country whose laws govern the interpretation and enforcement of the contract, as well as the venues, courts, arbitration forums within the governing law location where disputes about the contract must be resolved.
+    - **Format**: "[Location of governing law and jurisdiction]"
+    - **Example**: "State and federal courts located in Los Angeles County, California"
+
+    -------------------------
     ### EXTRACTION RULES
     - Output format (strict):
     Each field must be returned as:
@@ -200,28 +199,29 @@ The `"Text Positions"` dictionary is organized by pages, lines and coordinates i
     }},
     }}
     - Correct obvious typos, garbled text or formatting issues by applying logic and common sense.
+
     -------------------------
     ### OUTPUT SCHEMA (EXAMPLE)
     Return exactly one JSON object with these entries (example with two fields shown):
     {{
-        "Writer Party": {{
-        "Extracted Value": "John C. Adams",
+        "Rights Holder Party": {{
+            "Extracted Value": "John C. Adams",
             "Position": {{
-            "Page": 1,
-            "Coordinates": [
-                [0.114, 0.147],
-                [0.924, 0.147],
-                [0.924, 0.993],
-                [0.114, 0.993]
-            ],
-        }}
+                "Page": 1,
+                "Coordinates": [
+                    [0.114, 0.147],
+                    [0.924, 0.147],
+                    [0.924, 0.993],
+                    [0.114, 0.993]
+                ],
+            }}
         }},
-        "Publishing Designee(s) IPI Number": {{
-        "Extracted Value": "N/A",
-                }},
+        "Rights Holder Party IPI": {{
+            "Extracted Value": "N/A",
+        }},
     }}
 
--------------------------
+    -------------------------
     ### FINAL RULES
     - Output **only** the JSON object. No markdown, no commentary, no debug output.
     - Ensure JSON is valid, parseable and UTF-8 clean.

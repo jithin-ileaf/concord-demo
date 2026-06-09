@@ -366,6 +366,7 @@ def process_single_pdf(
         extraction_start = time()
         result_dict, full_text = extract_text_with_positions(pdf_path)
         result["extraction_time"] = time() - extraction_start
+        print(f"  ⏱ OCR + Data Extraction Time: {result['extraction_time']:.2f}s")
 
         # LLM processing
         formatted_prompt = prompt.format(
@@ -421,6 +422,7 @@ def process_single_pdf(
                     raise ValueError(f"No JSON object found in response. Raw response: {response_text[:500]}")
         
         result["llm_time"] = time() - llm_start
+        print(f"  ⏱ Coordinate Mapping (LLM) Time: {result['llm_time']:.2f}s")
 
         # Post-processing: Keep data flat (no categorization)
         # Data from LLM is already in flat structure, ready for direct Airtable upload
