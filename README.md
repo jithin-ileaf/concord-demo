@@ -22,3 +22,4 @@ Use your env variables
 
 Testing the application 
 - launch http://localhost:8000/docs#/
+
