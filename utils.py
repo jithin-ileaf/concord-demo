@@ -14,7 +14,7 @@ psycopg2.extras.register_uuid()
 load_dotenv()
 
 
-def create_model(model_name="gemini-2.5-pro",
+def create_model(model_name="gemini-3.6-pro",
                  temperature=0.2,
                  response_mime_type="application/json"):
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))

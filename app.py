@@ -119,7 +119,7 @@ if MONGODB_URI and MONGODB_DATABASE and MONGODB_COLLECTION:
 
 # Initialize the model
 model = create_model(
-    model_name="gemini-2.5-flash",
+    model_name="gemini-3.6-flash",
     temperature=0.2,
 )
 
@@ -237,6 +237,9 @@ def update_mongodb_and_airtable(
         file_name = document.get("file_name", "unknown")
         amendment_changes_record_id = document.get("amendment_changes_record_id")
 
+        print(f"  → [debug] record_id from MongoDB for {contract_id}: {record_id}")
+        print(f"  → [debug] json_data tables received from reviewer: {list(json_data.keys())}")
+
         # Update MongoDB with new JSON data
         update_data = {
             "actual_json": json_data,
@@ -261,6 +264,12 @@ def update_mongodb_and_airtable(
         print(f"  → Matched: {update_result.matched_count}, Modified: {update_result.modified_count}")
 
         # Update Airtable if configured and record_id exists
+        if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
+            print("  ✗ [debug] Skipping Airtable update: AIRTABLE_API_KEY/AIRTABLE_BASE_ID not configured")
+        elif not record_id:
+            print(f"  ✗ [debug] Skipping Airtable update: record_id is empty for contract_id {contract_id} "
+                  f"(document was likely saved without Airtable records at ingestion time)")
+
         if AIRTABLE_API_KEY and AIRTABLE_BASE_ID and record_id:
             from pyairtable import Api
             from post_processing import flatten_extracted_data
@@ -283,7 +292,12 @@ def update_mongodb_and_airtable(
 
             # First pass: Update Account and Contacts to get their record IDs
             for table_name in ["Account", "Contacts"]:
-                if table_name not in json_data or table_name not in record_id:
+                if table_name not in json_data:
+                    print(f"  ⚠ [debug] Skipping {table_name}: not present in reviewer json_data")
+                    continue
+                if table_name not in record_id:
+                    print(f"  ⚠ [debug] Skipping {table_name}: no record_id stored in MongoDB for this table "
+                          f"(known record_id keys: {list(record_id.keys())})")
                     continue
 
                 try:
@@ -307,6 +321,9 @@ def update_mongodb_and_airtable(
                         flattened_data.pop("Full Name", None)
                         contact_record_id = airtable_record_id
 
+                    print(f"  → [debug] Updating {table_name} (Record ID: {airtable_record_id}) "
+                          f"with fields: {list(flattened_data.keys())}")
+
                     # Update the record
                     table.update(airtable_record_id, flattened_data)
                     updated_tables.append(table_name)
@@ -315,7 +332,7 @@ def update_mongodb_and_airtable(
 
                 except Exception as table_error:
                     print(f"✗ Error updating Airtable table "
-                          f"{table_name}: {table_error}")
+                          f"{table_name}: {type(table_error).__name__}: {table_error}")
                     continue
 
             # Second pass: Update remaining tables with proper linking
@@ -331,6 +348,8 @@ def update_mongodb_and_airtable(
 
                 # Check if this table was originally created
                 if airtable_table_name not in record_id:
+                    print(f"  ⚠ [debug] Skipping {airtable_table_name}: no record_id stored in MongoDB for this "
+                          f"table (known record_id keys: {list(record_id.keys())})")
                     continue
 
                 try:
@@ -342,6 +361,8 @@ def update_mongodb_and_airtable(
 
                     # Flatten the nested structure
                     flattened_data = flatten_extracted_data(table_data)
+                    print(f"  → [debug] Updating {airtable_table_name} (Record ID: {airtable_record_id}) "
+                          f"with fields: {list(flattened_data.keys())}")
 
                     # Add Contract field to specific tables
                     if table_name in ["Registration Information", "General Information", 
@@ -366,7 +387,7 @@ def update_mongodb_and_airtable(
 
                 except Exception as table_error:
                     print(f"✗ Error updating Airtable table "
-                          f"{airtable_table_name}: {table_error}")
+                          f"{airtable_table_name}: {type(table_error).__name__}: {table_error}")
                     continue
 
             # Add Account Name linking to Contacts table if both exist
@@ -556,7 +577,7 @@ async def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "model": "gemini-2.5-flash",
+        "model": "gemini-3.6-flash",
         "timestamp": time()
     }
 
